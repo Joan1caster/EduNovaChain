@@ -5,11 +5,11 @@ import (
 )
 
 type OrderRepository interface {
-	CreateOrder(sellerID, nftID int64, price float64) (int64, error)
-	GetOrderByID(id int64) (*models.Order, error)
+	CreateOrder(sellerID, nftID uint, price float64) (uint, error)
+	GetOrderByID(id uint) (*models.Order, error)
 	UpdateOrder(order *models.Order) error
-	DeleteOrder(id int64) error
-	GetOpenOrdersByNFTID(nftID int64) ([]*models.Order, error)
-	CompleteOrder(id int64, buyerID int64) error
-	CancelOrder(id int64) error
+	DeleteOrder(id uint) error
+	GetOpenOrdersByNFTID(nftID uint) ([]*models.Order, error)
+	CompleteOrder(id uint, buyerID uint) error
+	CancelOrder(id uint) error
 }

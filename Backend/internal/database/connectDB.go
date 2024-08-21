@@ -1,57 +1,56 @@
 package database
 
 import (
-	"database/sql"
 	"fmt"
 	"log"
 	"time"
 
 	"nftPlantform/config"
 
-	_ "github.com/go-sql-driver/mysql"
+	"gorm.io/driver/mysql"
+	"gorm.io/gorm"
 )
 
-var db *sql.DB
+var db *gorm.DB
 
-// InitDB initializes the database connection
 func ConnectDB() error {
 	config := config.LoadConfig()
-	// 连接数据库
-	dsn := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s",
+	dsn := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=utf8mb4&parseTime=True&loc=Local",
 		config.MySQL.DBUser,
 		config.MySQL.DBPassword,
 		config.MySQL.DBHost,
 		config.MySQL.DBPort,
 		config.MySQL.DBName)
+
 	var err error
-	db, err = sql.Open("mysql", dsn)
+	db, err = gorm.Open(mysql.Open(dsn), &gorm.Config{})
 	if err != nil {
 		log.Fatalf("Failed to connect to database: %v", err)
+		return err
 	}
 
-	// 测试连接
-	err = db.Ping()
+	sqlDB, err := db.DB()
 	if err != nil {
-		log.Fatalf("Failed to ping database: %v", err)
+		log.Fatalf("Failed to get database instance: %v", err)
+		return err
 	}
-	// Configure the connection pool
-	db.SetMaxOpenConns(25)
-	db.SetMaxIdleConns(25)
-	db.SetConnMaxLifetime(5 * time.Minute)
+
+	sqlDB.SetMaxIdleConns(25)
+	sqlDB.SetMaxOpenConns(25)
+	sqlDB.SetConnMaxLifetime(5 * time.Minute)
 
 	log.Println("Database connected successfully")
 	return nil
 }
 
-// GetDB returns the database instance
-func GetDB() *sql.DB {
+func GetDB() *gorm.DB {
 	return db
 }
 
-// CloseDB closes the database connection
 func CloseDB() error {
-	if db != nil {
-		return db.Close()
+	sqlDB, err := db.DB()
+	if err != nil {
+		return err
 	}
-	return nil
+	return sqlDB.Close()
 }

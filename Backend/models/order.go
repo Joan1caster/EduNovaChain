@@ -2,17 +2,19 @@ package models
 
 import (
 	"time"
-	"database/sql"
 )
 
 type Order struct {
-	ID        int64
-	SellerID  int64
-	BuyerID   sql.NullInt64
-	NFTID     int64
-	Price     float64
-	Status    string
+	ID        uint      `gorm:"primaryKey"`
+	SellerID  uint      `gorm:"not null"`
+	BuyerID   *uint
+	NFTID     uint      `gorm:"not null"`
+	Price     float64   `gorm:"type:decimal(20,8);not null"`
+	Status    string    `gorm:"type:enum('OPEN','COMPLETED','CANCELLED');not null"`
 	CreatedAt time.Time
 	UpdatedAt time.Time
+	Seller    User      `gorm:"foreignKey:SellerID"`
+	Buyer     *User     `gorm:"foreignKey:BuyerID"`
+	NFT       NFT       `gorm:"foreignKey:NFTID"`
 }
 

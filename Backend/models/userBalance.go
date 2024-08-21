@@ -5,7 +5,8 @@ import (
 )
 
 type UserBalance struct {
-	UserID    int64
-	Balance   float64
+	UserID    uint    `gorm:"primaryKey"`
+	Balance   float64 `gorm:"type:decimal(20,8);not null;default:0"`
 	UpdatedAt time.Time
+	User      User `gorm:"foreignKey:UserID"`
 }

@@ -1,102 +1,83 @@
 package repository
 
 import (
-	"database/sql"
 	"errors"
-	"time"
 
-	"nftPlantform/api"  
-	"nftPlantform/models"  
+	"gorm.io/gorm"
+
+	"nftPlantform/api"
+	"nftPlantform/models"
 )
 
-type MySQLUserRepository struct {
-	db *sql.DB
+type GormUserRepository struct {
+	db *gorm.DB
 }
 
-func NewMySQLUserRepository(db *sql.DB) api.UserRepository {
-	return &MySQLUserRepository{db: db}
+func NewGormUserRepository(db *gorm.DB) api.UserRepository {
+	return &GormUserRepository{db: db}
 }
 
-func (r *MySQLUserRepository) CreateUser(username, email, passwordHash, walletAddress string) (int64, error) {
-	result, err := r.db.Exec(`
-		INSERT INTO users (username, email, password_hash, wallet_address)
-		VALUES (?, ?, ?, ?)`,
-		username, email, passwordHash, walletAddress)
-	if err != nil {
-		return 0, err
+func (r *GormUserRepository) CreateUser(username, email, passwordHash, walletAddress string) (int64, error) {
+	user := models.User{
+		Username:      username,
+		Email:         email,
+		PasswordHash:  passwordHash,
+		WalletAddress: walletAddress,
 	}
-	return result.LastInsertId()
+	result := r.db.Create(&user)
+	if result.Error != nil {
+		return 0, result.Error
+	}
+	return int64(user.ID), nil
 }
 
-func (r *MySQLUserRepository) GetUserByUsername(username string) (*models.User, error) {
+func (r *GormUserRepository) GetUserByUsername(username string) (*models.User, error) {
 	var user models.User
-	err := r.db.QueryRow(`
-		SELECT id, username, email, password_hash, wallet_address, created_at, updated_at
-		FROM users WHERE username = ?`, username).Scan(
-		&user.ID, &user.Username, &user.Email, &user.PasswordHash,
-		&user.WalletAddress, &user.CreatedAt, &user.UpdatedAt)
-	if err != nil {
-		if err == sql.ErrNoRows {
+	result := r.db.Where("username = ?", username).First(&user)
+	if result.Error != nil {
+		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 			return nil, errors.New("user not found")
 		}
-		return nil, err
+		return nil, result.Error
 	}
 	return &user, nil
 }
 
-func (r *MySQLUserRepository) GetUserByID(id int64) (*models.User, error) {
+func (r *GormUserRepository) GetUserByID(id int64) (*models.User, error) {
 	var user models.User
-	var createdAt, updatedAt sql.NullString
-
-	err := r.db.QueryRow(`
-		SELECT id, username, email, password_hash, wallet_address, created_at, updated_at
-		FROM users WHERE id = ?`, id).Scan(
-		&user.ID, &user.Username, &user.Email, &user.PasswordHash,
-		&user.WalletAddress, &createdAt, &updatedAt)
-
-	if err != nil {
-		if err == sql.ErrNoRows {
+	result := r.db.First(&user, id)
+	if result.Error != nil {
+		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 			return nil, errors.New("user not found")
 		}
-		return nil, err
-	}
-
-	if createdAt.Valid {
-		user.CreatedAt, _ = time.Parse("2006-01-02 15:04:05", createdAt.String)
-	}
-	if updatedAt.Valid {
-		user.UpdatedAt, _ = time.Parse("2006-01-02 15:04:05", updatedAt.String)
-	}
-
-	return &user, nil
-}
-
-func (r *MySQLUserRepository) GetUserByWalletAddress(walletAddress string) (*models.User, error) {
-	var user models.User
-	err := r.db.QueryRow(`
-		SELECT id, username, email, password_hash, wallet_address, created_at, updated_at
-		FROM users WHERE wallet_address = ?`, walletAddress).Scan(
-		&user.ID, &user.Username, &user.Email, &user.PasswordHash,
-		&user.WalletAddress, &user.CreatedAt, &user.UpdatedAt)
-	if err != nil {
-		if err == sql.ErrNoRows {
-			return nil, errors.New("user not found")
-		}
-		return nil, err
+		return nil, result.Error
 	}
 	return &user, nil
 }
 
-func (r *MySQLUserRepository) UpdateUser(user *models.User) error {
-	_, err := r.db.Exec(`
-		UPDATE users SET
-			username = ?, email = ?, password_hash = ?, wallet_address = ?, updated_at = ?
-		WHERE id = ?`,
-		user.Username, user.Email, user.PasswordHash, user.WalletAddress, time.Now(), user.ID)
-	return err
+func (r *GormUserRepository) GetUserByWalletAddress(walletAddress string) (*models.User, error) {
+	var user models.User
+	result := r.db.Where("wallet_address = ?", walletAddress).First(&user)
+	if result.Error != nil {
+		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			return nil, errors.New("user not found")
+		}
+		return nil, result.Error
+	}
+	return &user, nil
 }
 
-func (r *MySQLUserRepository) DeleteUser(id int64) error {
-	_, err := r.db.Exec("DELETE FROM users WHERE id = ?", id)
-	return err
+func (r *GormUserRepository) UpdateUser(id uint, updates map[string]interface{}) error {
+	result := r.db.Model(&models.User{}).Where("id = ?", id).Updates(updates)
+	if result.Error != nil {
+		return result.Error
+	}
+	if result.RowsAffected == 0 {
+		return errors.New("user not found")
+	}
+	return nil
+}
+
+func (r *GormUserRepository) DeleteUser(id int64) error {
+	return r.db.Delete(&models.User{}, id).Error
 }
