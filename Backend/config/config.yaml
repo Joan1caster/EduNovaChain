@@ -1,0 +1,6 @@
+mysql:
+  dbuser: john
+  dbpassword: 1111
+  dbhost: localhost
+  dbport: 3306
+  dbname: nft_platform
