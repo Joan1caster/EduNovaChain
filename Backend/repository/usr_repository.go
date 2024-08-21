@@ -17,7 +17,7 @@ func NewGormUserRepository(db *gorm.DB) api.UserRepository {
 	return &GormUserRepository{db: db}
 }
 
-func (r *GormUserRepository) CreateUser(username, email, passwordHash, walletAddress string) (int64, error) {
+func (r *GormUserRepository) CreateUser(username, email, passwordHash, walletAddress string) (uint, error) {
 	user := models.User{
 		Username:      username,
 		Email:         email,
@@ -28,7 +28,7 @@ func (r *GormUserRepository) CreateUser(username, email, passwordHash, walletAdd
 	if result.Error != nil {
 		return 0, result.Error
 	}
-	return int64(user.ID), nil
+	return user.ID, nil
 }
 
 func (r *GormUserRepository) GetUserByUsername(username string) (*models.User, error) {
@@ -43,7 +43,7 @@ func (r *GormUserRepository) GetUserByUsername(username string) (*models.User, e
 	return &user, nil
 }
 
-func (r *GormUserRepository) GetUserByID(id int64) (*models.User, error) {
+func (r *GormUserRepository) GetUserByID(id uint) (*models.User, error) {
 	var user models.User
 	result := r.db.First(&user, id)
 	if result.Error != nil {
@@ -78,6 +78,6 @@ func (r *GormUserRepository) UpdateUser(id uint, updates map[string]interface{})
 	return nil
 }
 
-func (r *GormUserRepository) DeleteUser(id int64) error {
+func (r *GormUserRepository) DeleteUser(id uint) error {
 	return r.db.Delete(&models.User{}, id).Error
 }

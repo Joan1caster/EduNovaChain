@@ -2,7 +2,7 @@ package main
 
 import (
 	"log"
-	_"nftPlantform/models"
+	_ "nftPlantform/models"
 	"nftPlantform/repository"
 
 	"gorm.io/gorm"
@@ -35,7 +35,7 @@ func TestUser(Db *gorm.DB) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	userSelect, err := userRepo.GetUserByID(int64(user.ID))
+	userSelect, err := userRepo.GetUserByID(user.ID)
 	if err != nil {
 		log.Fatal(err)
 	}
