@@ -5,6 +5,7 @@ import (
 
 	"nftPlantform/api"
 	"nftPlantform/models"
+
 	"gorm.io/gorm"
 )
 
@@ -16,13 +17,13 @@ func NewGormTransactionRepository(db *gorm.DB) api.TransactionRepository {
 	return &GormTransactionRepository{db: db}
 }
 
-func (r *GormTransactionRepository) CreateTransaction(orderID uint, txHash string, amount, gasFee float64) (uint, error) {
+func (r *GormTransactionRepository) CreateTransaction(orderID uint, txHash, amount, gasFee, status string) (uint, error) {
 	transaction := models.Transaction{
-		OrderID: orderID,
-		TxHash:  txHash,
-		Amount:  amount,
-		GasFee:  gasFee,
-		Status:  "PENDING",
+		OrderID:     orderID,
+		TxHash:      txHash,
+		Amount:      amount,
+		GasFeeEther: gasFee,
+		Status:      status,
 	}
 	result := r.db.Create(&transaction)
 	if result.Error != nil {
@@ -36,7 +37,7 @@ func (r *GormTransactionRepository) GetTransactionByID(id uint) (*models.Transac
 	result := r.db.First(&transaction, id)
 	if result.Error != nil {
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-			return nil, errors.New("Transaction not found")
+			return nil, errors.New("transaction not found")
 		}
 		return nil, result.Error
 	}
@@ -48,15 +49,19 @@ func (r *GormTransactionRepository) GetTransactionByTxHash(txHash string) (*mode
 	result := r.db.Where("tx_hash = ?", txHash).First(&transaction)
 	if result.Error != nil {
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-			return nil, errors.New("Transaction not found")
+			return nil, errors.New("transaction not found")
 		}
 		return nil, result.Error
 	}
 	return &transaction, nil
 }
 
-func (r *GormTransactionRepository) UpdateTransactionStatus(id uint, status string) error {
-	return r.db.Model(&models.Transaction{}).Where("id = ?", id).Update("status", status).Error
+func (r *GormTransactionRepository) UpdateTransactionStatus(orderID uint, status string) error {
+	return r.db.Model(&models.Transaction{}).Where("id = ?", orderID).Update("status", status).Error
+}
+
+func (r *GormTransactionRepository) UpdateTransactionGasFee(orderID uint, gasFeeEther string) error {
+	return r.db.Model(&models.Transaction{}).Where("id = ?", orderID).Update("GasFee", gasFeeEther).Error
 }
 
 func (r *GormTransactionRepository) GetTransactionsByOrderID(orderID uint) ([]*models.Transaction, error) {

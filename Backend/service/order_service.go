@@ -3,19 +3,21 @@ package service
 import (
 	"context"
 	"errors"
+	"fmt"
+	"log"
 	"math/big"
-	"nftPlantform/api"
-	"strconv"
+	"time"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
+
+	"nftPlantform/api"
 )
 
 type NFTMarketplaceService struct {
 	nftRepo         api.NFTRepository
 	orderRepo       api.OrderRepository
 	transactionRepo api.TransactionRepository
-	userBalanceRepo api.UserBalanceRepository
 	userRepo        api.UserRepository
 }
 
@@ -52,54 +54,67 @@ func (s *NFTMarketplaceService) ListNFTForSale(sellerID, nftID uint, price float
 	return orderID, nil
 }
 
-func (s *NFTMarketplaceService) BuyNFT(buyerAddress string, orderID uint) error {
-    // Get the order
-    order, err := s.orderRepo.GetOrderByID(orderID)
-    if err != nil {
-        return err
-    }
-    if order.Status != "OPEN" {
-        return errors.New("order is not open")
-    }
+func (s *NFTMarketplaceService) CreateTransaction(orderID uint, txHash, amount string) error {
+	// 创建初始交易记录
+	_, err := s.transactionRepo.CreateTransaction(orderID, txHash, amount, "0", "PENDING")
+	if err != nil {
+		return err
+	}
 
-    // Connect to Ethereum network
-    client, err := ethclient.Dial("https://mainnet.infura.io/v3/YOUR-PROJECT-ID")
-    if err != nil {
-        return err
-    }
+	// 启动一个 goroutine 来监听交易确认
+	go s.monitorTransaction(txHash, orderID)
 
-    // Check buyer's balance
-    balance, err := client.BalanceAt(context.Background(), common.HexToAddress(buyerAddress), nil)
-    if err != nil {
-        return err
-    }
+	return nil
+}
 
-    price := new(big.Int)
-    priceStr := strconv.FormatFloat(order.Price, 'f', -1, 64)
-	price.SetString(priceStr, 10)
-    if balance.Cmp(price) < 0 {
-        return errors.New("insufficient balance")
-    }
+func (s *NFTMarketplaceService) monitorTransaction(txHash string, orderID uint) {
+	client, err := ethclient.Dial("https://mainnet.infura.io/v3/YOUR-PROJECT-ID")
+	if err != nil {
+		log.Printf("Failed to connect to the Ethereum client: %v", err)
+		return
+	}
 
-    // On-Chain transaction
-	
+	for {
+		time.Sleep(15 * time.Second) // 每15秒检查一次
+		tx, isPending, err := client.TransactionByHash(context.Background(), common.HexToHash(txHash))
+		if err != nil {
+			log.Printf("Failed to fetch transaction: %v", err)
+			continue
+		}
 
-    // Update NFT ownership
-    nft, err := s.nftRepo.GetNFTByID(order.NFTID)
-    if err != nil {
-        return err
-    }	
-    nft.OwnerID = *order.BuyerID
-    err = s.nftRepo.UpdateNFT(nft)
-    if err != nil {
-        return err
-    }
+		if !isPending {
+			receipt, err := client.TransactionReceipt(context.Background(), tx.Hash())
+			if err != nil {
+				log.Printf("Failed to get transaction receipt: %v", err)
+				continue
+			}
 
-    // Complete the order
-    err = s.orderRepo.CompleteOrder(orderID, *order.BuyerID)
-    if err != nil {
-        return err
-    }
+			var status string
+			if receipt.Status == 1 {
+				status = "COMPLETED"
+			} else {
+				status = "FAILED"
+			}
 
-    return nil
+			gasUsed := new(big.Int).SetUint64(receipt.GasUsed)
+			gasPrice := tx.GasPrice()
+			gasFee := new(big.Int).Mul(gasUsed, gasPrice)
+
+			gasFeeFloat, _ := gasFee.Float64()
+			gasFeeEther := gasFeeFloat / 1e18 // Convert wei to ether
+
+			err = s.transactionRepo.UpdateTransactionStatus(orderID, status)
+			if err != nil {
+				log.Printf("Failed to update transaction status: %v", err)
+			}
+
+			err = s.transactionRepo.UpdateTransactionGasFee(orderID, fmt.Sprint(gasFeeEther, 'f', -1, 64))
+			if err != nil {
+				log.Printf("Failed to update transaction gas fee: %v", err)
+			}
+
+			// 交易已确认，退出循环
+			break
+		}
+	}
 }

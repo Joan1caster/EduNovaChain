@@ -7,7 +7,7 @@ import (
 
 func InitTable() {
 	db := GetDB()
-	err := db.AutoMigrate(&models.User{}, &models.NFT{}, &models.Order{}, &models.Transaction{}, &models.UserBalance{})
+	err := db.AutoMigrate(&models.User{}, &models.NFT{}, &models.Order{}, &models.Transaction{})
 	if err != nil {
 		log.Fatalf("Failed to auto migrate: %v", err)
 	}
