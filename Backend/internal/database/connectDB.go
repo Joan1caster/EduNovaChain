@@ -3,12 +3,14 @@ package database
 import (
 	"fmt"
 	"log"
+	"os"
 	"time"
-
-	"nftPlantform/config"
 
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
+
+	"nftPlantform/config"
 )
 
 var db *gorm.DB
@@ -23,7 +25,15 @@ func ConnectDB() error {
 		config.MySQL.DBName)
 
 	var err error
-	db, err = gorm.Open(mysql.Open(dsn), &gorm.Config{})
+	newLogger := logger.New(
+		log.New(os.Stdout, "\r\n", log.LstdFlags),
+		logger.Config{
+			SlowThreshold: time.Second,
+			LogLevel:      logger.Info,
+			Colorful:      true,
+		},
+	)
+	db, err = gorm.Open(mysql.Open(dsn), &gorm.Config{Logger: newLogger})
 	if err != nil {
 		log.Fatalf("Failed to connect to database: %v", err)
 		return err

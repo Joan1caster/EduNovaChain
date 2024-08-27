@@ -5,6 +5,7 @@ import (
 
 	"nftPlantform/api"
 	"nftPlantform/models"
+
 	"gorm.io/gorm"
 )
 
@@ -31,13 +32,18 @@ func (r *GormOrderRepository) CreateOrder(sellerID, nftID uint, price float64) (
 }
 
 func (r *GormOrderRepository) GetOrderByID(id uint) (*models.Order, error) {
+	if r.db == nil {
+		return nil, errors.New("Database connection not initialized")
+	}
+
 	var order models.Order
-	result := r.db.First(&order, id)
+	result := r.db.Take(&order, id)
 	if result.Error != nil {
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-			return nil, errors.New("Order not found")
+			return nil, gorm.ErrRecordNotFound
 		}
-		return nil, result.Error
+		// 可以在这里添加日志
+		return nil, errors.New("failed to get order")
 	}
 	return &order, nil
 }
@@ -68,4 +74,8 @@ func (r *GormOrderRepository) CompleteOrder(id uint, buyerID uint) error {
 
 func (r *GormOrderRepository) CancelOrder(id uint) error {
 	return r.db.Model(&models.Order{}).Where("id = ?", id).Update("status", "CANCELLED").Error
+}
+
+func (r *GormOrderRepository) ReopenOrder(id uint) error {
+	return r.db.Model(&models.Order{}).Where("id = ?", id).Update("status", "OPEN").Error
 }

@@ -1,0 +1,84 @@
+type NFT struct {
+	ID              uint      `gorm:"primaryKey"`
+	TokenID         string    `gorm:"unique;not null"`
+	ContractAddress string    `gorm:"not null"`
+	OwnerID         uint      `gorm:"not null"`
+	CreatorID       uint      `gorm:"not null"`
+	MetadataURI     string    `gorm:"not null"`
+	CreatedAt       time.Time
+	UpdatedAt       time.Time
+	Owner           User      `gorm:"foreignKey:OwnerID"`
+	Creator         User      `gorm:"foreignKey:CreatorID"`
+}
+
+type Order struct {
+	ID        uint      `gorm:"primaryKey"`
+	SellerID  uint      `gorm:"not null"`
+	BuyerID   *uint
+	NFTID     uint      `gorm:"not null"`
+	Price     float64   `gorm:"type:decimal(20,8);not null"`
+	Status    string    `gorm:"type:enum('OPEN','COMPLETED','CANCELLED');not null"`
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	Seller    User      `gorm:"foreignKey:SellerID"`
+	Buyer     *User     `gorm:"foreignKey:BuyerID"`
+	NFT       NFT       `gorm:"foreignKey:NFTID"`
+}
+
+type User struct {
+	ID            uint      `gorm:"primaryKey"`
+	Username      string    `gorm:"unique;not null"`
+	Email         string    `gorm:"unique;not null"`
+	PasswordHash  string    `gorm:"not null"`
+	WalletAddress string    `gorm:"unique;not null"`
+	CreatedAt     time.Time
+	UpdatedAt     time.Time
+}
+
+type Transaction struct {
+	ID          uint   `gorm:"primaryKey"`
+	OrderID     uint   `gorm:"not null"`
+	TxHash      string `gorm:"unique;not null"`
+	Amount      string `gorm:"type:varchar(78);not null"` // 使用 string 存储
+	GasFeeEther string `gorm:"type:varchar(78);not null"` // 使用 string 存储
+	Status      string `gorm:"type:enum('PENDING','COMPLETED','FAILED');not null"`
+	CreatedAt   time.Time
+	Order       Order `gorm:"foreignKey:OrderID"`
+}
+
+type NFTRepository interface {
+	CreateNFT(tokenID, contractAddress string, ownerID, creatorID uint, metadataURI string) (uint, error)
+	GetNFTByID(id uint) (*models.NFT, error)
+	GetNFTByTokenID(tokenID string) (*models.NFT, error)
+	UpdateNFT(nft *models.NFT) error
+	DeleteNFT(id uint) error
+	GetNFTsByOwnerID(ownerID uint) ([]*models.NFT, error)
+}
+
+type OrderRepository interface {
+	CreateOrder(sellerID, nftID uint, price float64) (uint, error)
+	GetOrderByID(id uint) (*models.Order, error)
+	UpdateOrder(order *models.Order) error
+	DeleteOrder(id uint) error
+	GetOpenOrdersByNFTID(nftID uint) ([]*models.Order, error)
+	CompleteOrder(id uint, buyerID uint) error
+	CancelOrder(id uint) error
+}
+
+type UserRepository interface {
+	CreateUser(username, email, passwordHash, walletAddress string) (uint, error)
+	GetUserByID(id uint) (*models.User, error)
+	GetUserByUsername(username string) (*models.User, error)
+	GetUserByWalletAddress(walletAddress string) (*models.User, error)
+	UpdateUser(id uint, updates map[string]interface{}) error
+	DeleteUser(id uint) error
+}
+
+type TransactionRepository interface {
+	CreateTransaction(orderID uint, txHash, amount, gasFee, status string) (uint, error)
+	GetTransactionByID(id uint) (*models.Transaction, error)
+	GetTransactionByTxHash(txHash string) (*models.Transaction, error)
+	UpdateTransactionStatus(id uint, status string) error
+	GetTransactionsByOrderID(orderID uint) ([]*models.Transaction, error)
+	UpdateTransactionGasFee(orderID uint, gasFeeEther string) error
+}

@@ -12,4 +12,5 @@ type OrderRepository interface {
 	GetOpenOrdersByNFTID(nftID uint) ([]*models.Order, error)
 	CompleteOrder(id uint, buyerID uint) error
 	CancelOrder(id uint) error
+	ReopenOrder(id uint) error
 }

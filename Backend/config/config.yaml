@@ -4,3 +4,10 @@ mysql:
   dbhost: localhost
   dbport: 3306
   dbname: nft_platform
+
+contract:
+  eth_rpc_url: "http://localhost:8545"
+  usrAddress: "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"
+  privateKey: "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80"
+  contractAddress: "0x90193C961A926261B756D1E5bb255e67ff9498A1"
+  contractApiFile: "~/project/EduNovaChain/Contract/out/nft.sol/EducationInnovationNFT.json"

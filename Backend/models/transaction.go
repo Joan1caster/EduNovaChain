@@ -14,11 +14,3 @@ type Transaction struct {
 	CreatedAt   time.Time
 	Order       Order `gorm:"foreignKey:OrderID"`
 }
-
-type PurchaseInfo struct {
-	OrderID            uint    `json:"orderID"`
-	NFTContractAddress string  `json:"nftContractAddress"`
-	TokenID            string  `json:"tokenID"`
-	Price              float64 `json:"price"`
-	SellerAddress      string  `json:"sellerAddress"`
-}
