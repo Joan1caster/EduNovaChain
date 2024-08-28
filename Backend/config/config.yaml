@@ -5,6 +5,12 @@ mysql:
   dbport: 3306
   dbname: nft_platform
 
+redis:
+  host: localhost
+  port: 6379
+  password: "test"
+  db: 0
+
 contract:
   eth_rpc_url: "http://localhost:8545"
   usrAddress: "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"

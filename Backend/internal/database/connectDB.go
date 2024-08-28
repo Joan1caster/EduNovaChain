@@ -1,19 +1,23 @@
 package database
 
 import (
+	"context"
 	"fmt"
+	"github.com/go-redis/redis/v8"
+	"gorm.io/driver/mysql"
+	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 	"log"
 	"os"
 	"time"
 
-	"gorm.io/driver/mysql"
-	"gorm.io/gorm"
-	"gorm.io/gorm/logger"
-
 	"nftPlantform/config"
 )
 
-var db *gorm.DB
+var (
+	db      *gorm.DB
+	redisDB *redis.Client
+)
 
 func ConnectDB() error {
 	config := config.LoadConfig()
@@ -49,7 +53,21 @@ func ConnectDB() error {
 	sqlDB.SetMaxOpenConns(25)
 	sqlDB.SetConnMaxLifetime(5 * time.Minute)
 
-	log.Println("Database connected successfully")
+	log.Println("MySQL database connected successfully")
+
+	redisDB = redis.NewClient(&redis.Options{
+		Addr:     fmt.Sprintf("%s:%d", config.Redis.Host, config.Redis.Port),
+		Password: config.Redis.Password,
+		DB:       config.Redis.DB,
+	})
+
+	_, err = redisDB.Ping(context.Background()).Result()
+	if err != nil {
+		log.Fatalf("Failed to connect to Redis: %v", err)
+		return err
+	}
+
+	log.Println("Redis connected successfully")
 	return nil
 }
 
@@ -57,10 +75,22 @@ func GetDB() *gorm.DB {
 	return db
 }
 
+func GetRedis() *redis.Client {
+	return redisDB
+}
+
 func CloseDB() error {
 	sqlDB, err := db.DB()
 	if err != nil {
 		return err
 	}
-	return sqlDB.Close()
+	if err := sqlDB.Close(); err != nil {
+		return err
+	}
+
+	if err := redisDB.Close(); err != nil {
+		return err
+	}
+
+	return nil
 }
