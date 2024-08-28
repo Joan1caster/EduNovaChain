@@ -1,0 +1,12 @@
+[profile.default]
+src = "src"
+out = "out"
+libs = ["lib"]
+remappings = ["@openzeppelin/contracts/=lib/openzeppelin-contracts/contracts/"]
+# See more config options https://github.com/foundry-rs/foundry/blob/master/crates/config/README.md#all-options
+
+[default]
+eth_rpc_url = "http://localhost:8545"
+# 使用环境变量引用私钥
+wallet = { private_key = "${PRIVATE_KEY}" }
+
