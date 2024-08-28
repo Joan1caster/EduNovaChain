@@ -29,6 +29,13 @@ type Config struct {
 		ContractAddress string `yaml:"contractAddress"`
 		ContractApiFile string `yaml:"contractApiFile"`
 	} `yaml:"contract"`
+
+	Redis struct {
+		Host     string `yaml:"host"`
+		Port     int    `yaml:"port"`
+		Password string `yaml:"password"`
+		DB       int    `yaml:"db"`
+	} `yaml:"redis"`
 }
 
 func LoadConfig() *Config {

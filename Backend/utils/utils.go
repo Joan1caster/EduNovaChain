@@ -1,23 +1,26 @@
 package utils
+
 import (
-    "encoding/json"
+	"crypto/rand"
+	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"os"
 
-    "github.com/ethereum/go-ethereum/common"
-    "github.com/ethereum/go-ethereum/crypto"
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/crypto"
 )
 
 func VerifySignature(address, signature, message string) bool {
-    addr := common.HexToAddress(address)
-    sig := common.FromHex(signature)
-    msgHash := crypto.Keccak256([]byte(message))
-    pubKey, err := crypto.SigToPub(msgHash, sig)
-    if err != nil {
-        return false
-    }
-    recoveredAddr := crypto.PubkeyToAddress(*pubKey)
-    return addr == recoveredAddr
+	addr := common.HexToAddress(address)
+	sig := common.FromHex(signature)
+	msgHash := crypto.Keccak256([]byte(message))
+	pubKey, err := crypto.SigToPub(msgHash, sig)
+	if err != nil {
+		return false
+	}
+	recoveredAddr := crypto.PubkeyToAddress(*pubKey)
+	return addr == recoveredAddr
 }
 
 type ContractABI struct {
@@ -38,4 +41,14 @@ func ReadABI(filePath string) (json.RawMessage, string, error) {
 	stringABI := string(jsonABI)
 
 	return jsonABI, stringABI, nil
+}
+
+// GenerateNonce 生成一个随机的 nonce
+func GenerateNonce() string {
+	nonce := make([]byte, 16)
+	_, err := rand.Read(nonce)
+	if err != nil {
+		return ""
+	}
+	return hex.EncodeToString(nonce)
 }
