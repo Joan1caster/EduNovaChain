@@ -7,11 +7,12 @@ import (
 	"github.com/go-redis/redis/v8"
 	"github.com/golang-jwt/jwt/v4"
 	"net/http"
+	"nftPlantform/config"
 	"nftPlantform/internal/database"
 	"nftPlantform/models"
 )
 
-var jwtSecret = []byte("c2f7e3b6f88c4e1b8d9252f3d7c74eae63f2b41e519f2e9a75c7685c4b7e89a2")
+var jwtSecret = []byte(config.AppConfig.JwtSecret)
 
 func AuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {

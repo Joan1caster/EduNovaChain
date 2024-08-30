@@ -1,4 +1,5 @@
 # Compiler files
 Contract/.github
+.idea
 
 !include Contract/.gitignore

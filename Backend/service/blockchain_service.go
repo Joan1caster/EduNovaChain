@@ -5,10 +5,10 @@ import (
 	"errors"
 	"log"
 	"math/big"
+	configs "nftPlantform/config"
 
 	"github.com/ethereum/go-ethereum/common"
 
-	"nftPlantform/config"
 	"nftPlantform/models"
 )
 
@@ -27,9 +27,8 @@ type VarifiedInfo struct {
 }
 
 func (s *Blockchainservice) MonitorTransaction(listener *TransactionListener) (VarifiedInfo, error) {
-	cfg := config.LoadConfig()
 	var varifiedInfo VarifiedInfo
-	client, err := models.GetClient(cfg.Contract.Eth_rpc_url)
+	client, err := models.GetClient(configs.AppConfig.Contract.Eth_rpc_url)
 	if err != nil {
 		log.Printf("Failed to connect to the Ethereum client: %v", err)
 		return varifiedInfo, err
