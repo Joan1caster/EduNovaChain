@@ -42,6 +42,8 @@ type Config struct {
 	} `yaml:"redis"`
 
 	JwtSecret string `yaml:"jwtSecret"`
+
+	IpfsApiKey string `mapstructure:"ipfsApiKey"`
 }
 
 // LoadConfig loads the configuration from the YAML file.
