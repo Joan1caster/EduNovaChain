@@ -75,6 +75,7 @@ require (
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/ethereum/go-ethereum v1.14.8
 	github.com/gin-gonic/gin v1.10.0
+	github.com/golang-jwt/jwt/v4 v4.5.0
 	github.com/stretchr/testify v1.9.0
 	golang.org/x/time v0.6.0
 	gorm.io/driver/mysql v1.5.7
