@@ -1,14 +1,17 @@
+server:
+  port: ":8080"
+
 mysql:
-  dbuser: john
-  dbpassword: 1111
+  dbuser: root
+  dbpassword: root
   dbhost: localhost
-  dbport: 3306
+  dbport: 33306
   dbname: nft_platform
 
 redis:
   host: localhost
-  port: 6379
-  password: "test"
+  port: 65379
+  password: ""
   db: 0
 
 contract:
@@ -17,3 +20,5 @@ contract:
   privateKey: "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80"
   contractAddress: "0x90193C961A926261B756D1E5bb255e67ff9498A1"
   contractApiFile: "~/project/EduNovaChain/Contract/out/nft.sol/EducationInnovationNFT.json"
+
+jwtSecret: "c2f7e3b6f88c4e1b8d9252f3d7c74eae63f2b41e519f2e9a75c7685c4b7e89a2"

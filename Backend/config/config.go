@@ -9,11 +9,15 @@ import (
 )
 
 var (
-	config     *Config
+	AppConfig  Config
 	configOnce sync.Once
 )
 
 type Config struct {
+	Server struct {
+		Port string `yaml:"port"`
+	} `yaml:"server"`
+
 	MySQL struct {
 		DBUser     string `yaml:"dbuser"`
 		DBPassword string `yaml:"dbpassword"`
@@ -36,21 +40,25 @@ type Config struct {
 		Password string `yaml:"password"`
 		DB       int    `yaml:"db"`
 	} `yaml:"redis"`
+
+	JwtSecret string `yaml:"jwtSecret"`
 }
 
-func LoadConfig() *Config {
+// LoadConfig loads the configuration from the YAML file.
+func LoadConfig(configPath string) error {
+	var err error
 	configOnce.Do(func() {
-		// 读取YAML文件
-		data, err := os.ReadFile("config/config.yaml")
+		var data []byte
+		data, err = os.ReadFile(configPath)
 		if err != nil {
-			log.Fatalf("error: %v", err)
+			log.Printf("Error reading config file: %v", err)
+			return
 		}
-
-		// 解析YAML
-		err = yaml.Unmarshal(data, config)
+		err = yaml.Unmarshal(data, &AppConfig)
 		if err != nil {
-			log.Fatalf("error: %v", err)
+			log.Printf("Error unmarshalling config file: %v", err)
+			return
 		}
 	})
-	return config
+	return err
 }

@@ -20,13 +20,12 @@ var (
 )
 
 func ConnectDB() error {
-	config := config.LoadConfig()
 	dsn := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=utf8mb4&parseTime=True&loc=Local",
-		config.MySQL.DBUser,
-		config.MySQL.DBPassword,
-		config.MySQL.DBHost,
-		config.MySQL.DBPort,
-		config.MySQL.DBName)
+		config.AppConfig.MySQL.DBUser,
+		config.AppConfig.MySQL.DBPassword,
+		config.AppConfig.MySQL.DBHost,
+		config.AppConfig.MySQL.DBPort,
+		config.AppConfig.MySQL.DBName)
 
 	var err error
 	newLogger := logger.New(
@@ -56,9 +55,9 @@ func ConnectDB() error {
 	log.Println("MySQL database connected successfully")
 
 	redisDB = redis.NewClient(&redis.Options{
-		Addr:     fmt.Sprintf("%s:%d", config.Redis.Host, config.Redis.Port),
-		Password: config.Redis.Password,
-		DB:       config.Redis.DB,
+		Addr:     fmt.Sprintf("%s:%d", config.AppConfig.Redis.Host, config.AppConfig.Redis.Port),
+		Password: config.AppConfig.Redis.Password,
+		DB:       config.AppConfig.Redis.DB,
 	})
 
 	_, err = redisDB.Ping(context.Background()).Result()
