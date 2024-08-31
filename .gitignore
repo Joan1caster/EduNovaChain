@@ -3,3 +3,25 @@ Contract/.github
 .idea
 
 !include Contract/.gitignore
+
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# dependencies
+Frontend/node_moudules/
+
+# next.js
+Frontend/.next/*
+Frontend/out/
+
+# production
+Frontend/build
+
+# misc
+.DS_Store
+*.pem
+
+# local env files
+Frontend/.env*.local
+
+# vercel
+Frontend/.vercel
