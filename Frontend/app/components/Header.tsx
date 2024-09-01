@@ -59,11 +59,16 @@ export default function Header() {
           </div>
         </div>
         <div className="w-1/2 bg-transparent flex justify-between">
-          <div className="w-52 rounded bg-white py-1 px-4 flex gap-2 justify-between">
+          <div className="w-52 rounded bg-white py-1 pr-2 flex gap-2 justify-between">
             <input
               placeholder="搜索"
-              className="text-sm placeholder:text-slate-400 hover:outline-none focus:outline-none"
+              className="text-xs placeholder:text-slate-400 border-none outline-none shadow-none focus:shadow-none focus:ring-offset-0 focus:ring-0"
             />
+            {/* <input
+              type="text"
+              placeholder="搜索"
+              className="block w-full border-none text-gray-900 placeholder:text-gray-400 sm:text-xs focus:outline-none focus:shadow-none focus:border-none"
+            ></input> */}
             <Image
               src="/images/svg/search.svg"
               alt="search"
