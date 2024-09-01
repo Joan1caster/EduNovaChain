@@ -1,12 +1,13 @@
 package main
 
 import (
-	"github.com/sirupsen/logrus"
 	"io"
 	"log"
 	"nftPlantform/config"
 	routes "nftPlantform/router"
 	"os"
+
+	"github.com/sirupsen/logrus"
 
 	"nftPlantform/internal/database"
 	_ "nftPlantform/service"
@@ -44,7 +45,7 @@ func main() {
 	database.InitTable()
 	db := database.GetDB()
 	router := routes.SetupRouter(db)
-	err = router.Run(":8080")
+	err = router.Run("0.0.0.0:4455")
 	if err != nil {
 		return
 	}
