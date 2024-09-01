@@ -2,15 +2,15 @@ server:
   port: ":8080"
 
 mysql:
-  dbuser: root
-  dbpassword: root
+  dbuser: john
+  dbpassword: 1111
   dbhost: localhost
-  dbport: 33306
+  dbport: 3306
   dbname: nft_platform
 
 redis:
   host: localhost
-  port: 65379
+  port: 6379
   password: ""
   db: 0
 

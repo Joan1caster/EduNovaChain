@@ -1,7 +1,9 @@
 package utils
 
 import (
+	"bytes"
 	"crypto/rand"
+	"encoding/binary"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
@@ -51,4 +53,31 @@ func GenerateNonce() string {
 		return ""
 	}
 	return hex.EncodeToString(nonce)
+}
+
+// Float32ArrayToBlob converts a [512]float32 to []byte
+func Float32ArrayToBlob(arr [512]float32) ([]byte, error) {
+    buf := new(bytes.Buffer)
+    for _, v := range arr {
+        err := binary.Write(buf, binary.LittleEndian, v)
+        if err != nil {
+            return nil, err
+        }
+    }
+    return buf.Bytes(), nil
+}
+
+// BlobToFloat32Array converts []byte to [512]float32
+func BlobToFloat32Array(b []byte) ([512]float32, error) {
+    var arr [512]float32
+    buf := bytes.NewReader(b)
+    for i := 0; i < 512; i++ {
+        var v float32
+        err := binary.Read(buf, binary.LittleEndian, &v)
+        if err != nil {
+            return arr, err
+        }
+        arr[i] = v
+    }
+    return arr, nil
 }

@@ -7,6 +7,7 @@ import (
 
 	"nftPlantform/api"
 	"nftPlantform/models"
+	"nftPlantform/utils"
 )
 
 type GormNFTRepository struct {
@@ -18,14 +19,22 @@ func NewGormNFTRepository(db *gorm.DB) api.NFTRepository {
 }
 
 func (r *GormNFTRepository) CreateNFT(tokenID, contractAddress string, ownerID, creatorID uint, metadataURI string, summaryFeature, contentFeature [512]float32) (uint, error) {
+	summaryFeatureBlob, err := utils.Float32ArrayToBlob(summaryFeature)
+	if err != nil {
+		return 0, err
+	}
+	contentFeatureBlob, err := utils.Float32ArrayToBlob(contentFeature)
+	if err != nil {
+		return 0, err
+	}
 	nft := models.NFT{
 		TokenID:         tokenID,
 		ContractAddress: contractAddress,
 		OwnerID:         ownerID,
 		CreatorID:       creatorID,
 		MetadataURI:     metadataURI,
-		SummaryFeature: summaryFeature,
-		ContentFeature: contentFeature,
+		SummaryFeature:  summaryFeatureBlob,
+		ContentFeature:  contentFeatureBlob,
 	}
 	result := r.db.Create(&nft)
 	if result.Error != nil {
@@ -93,7 +102,11 @@ func (r *GormNFTRepository) GetSummaryFeatures(batchSize int) ([][512]float32, e
 		}
 
 		for _, nft := range batch {
-			allSummaryFeatures = append(allSummaryFeatures, nft.SummaryFeature)
+			summaryFeatureFloat, err := utils.BlobToFloat32Array(nft.SummaryFeature)
+			if err != nil {
+				return nil, err
+			}
+			allSummaryFeatures = append(allSummaryFeatures, summaryFeatureFloat)
 			lastID = nft.ID
 		}
 
@@ -122,7 +135,11 @@ func (r *GormNFTRepository) GetContentFeatures(batchSize int) ([][512]float32, e
 		}
 
 		for _, nft := range batch {
-			allMetadatatFeatures = append(allMetadatatFeatures, nft.SummaryFeature)
+			summaryFeatureFloat, err := utils.BlobToFloat32Array(nft.SummaryFeature)
+			if err != nil {
+				return nil, err
+			}
+			allMetadatatFeatures = append(allMetadatatFeatures, summaryFeatureFloat)
 			lastID = nft.ID
 		}
 
