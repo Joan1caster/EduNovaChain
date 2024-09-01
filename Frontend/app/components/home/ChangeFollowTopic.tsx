@@ -52,6 +52,7 @@ type Action =
   | { type: "init"; payload: TagType[] }
   | { type: "add"; payload: TagType }
   | { type: "remove"; payload: TagType };
+
 const initialState: InitialState = {
   topicKeys: [],
   topics: [],
