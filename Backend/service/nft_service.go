@@ -21,8 +21,8 @@ func NewNFTService(nftRepo api.NFTRepository) *NFTService {
 }
 
 // CreateNFT 创建新的NFT
-func (s *NFTService) CreateNFT(tokenID, contractAddress string, ownerID, creatorID uint, metadataURI string, abstractFeature, metadataFeature [512]float32) (uint, error) {
-	return s.nftRepo.CreateNFT(tokenID, contractAddress, ownerID, creatorID, metadataURI, abstractFeature, metadataFeature)
+func (s *NFTService) CreateNFT(tokenID, contractAddress string, ownerID, creatorID uint, metadataURI string, summaryFeature, metadataFeature [512]float32) (uint, error) {
+	return s.nftRepo.CreateNFT(tokenID, contractAddress, ownerID, creatorID, metadataURI, summaryFeature, metadataFeature)
 }
 
 // GetNFTDetails 获取NFT详情
@@ -63,7 +63,7 @@ func (s *NFTService) UpdateNFTMetadata(nftID uint, newMetadataURI string) error 
 
 // 计算NFT的相似度，超过阈值的返回true，否则返回false
 func (s *NFTService) CheckSimilarity(feature [512]float32, threshold float32, batchsize int) (bool, error) {
-	allFeatures, err := s.nftRepo.GetMetadataFeatures(batchsize)
+	allFeatures, err := s.nftRepo.GetContentFeatures(batchsize)
 	if err != nil {
 		return false, err
 	}

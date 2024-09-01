@@ -20,12 +20,12 @@ func NewIPFSHandler(ipfsService *service.IPFSService) *IPFSHandler {
 }
 
 func (i *IPFSHandler) UploadData(c *gin.Context) {
-	var nftData models.NFTData
-	if err := c.ShouldBindJSON(&nftData); err != nil {
+	var metaData models.Metadata
+	if err := c.ShouldBindJSON(&metaData); err != nil {
 		utils.Error(c, http.StatusBadRequest, err.Error())
 		return
 	}
-	hash, err := i.ipfsService.UploadData(nftData)
+	hash, err := i.ipfsService.UploadData(metaData)
 	if err != nil {
 		utils.Error(c, http.StatusInternalServerError, err.Error())
 		return
@@ -36,10 +36,10 @@ func (i *IPFSHandler) UploadData(c *gin.Context) {
 
 func (i *IPFSHandler) GetData(c *gin.Context) {
 	hash := c.Query("hash")
-	nftData, err := i.ipfsService.GetData(hash)
+	metaData, err := i.ipfsService.GetData(hash)
 	if err != nil {
 		utils.Error(c, http.StatusInternalServerError, err.Error())
 		return
 	}
-	utils.Success(c, nftData)
+	utils.Success(c, metaData)
 }

@@ -17,15 +17,15 @@ func NewGormNFTRepository(db *gorm.DB) api.NFTRepository {
 	return &GormNFTRepository{db: db}
 }
 
-func (r *GormNFTRepository) CreateNFT(tokenID, contractAddress string, ownerID, creatorID uint, metadataURI string, abstractFeature, metadataFeature [512]float32) (uint, error) {
+func (r *GormNFTRepository) CreateNFT(tokenID, contractAddress string, ownerID, creatorID uint, metadataURI string, summaryFeature, contentFeature [512]float32) (uint, error) {
 	nft := models.NFT{
 		TokenID:         tokenID,
 		ContractAddress: contractAddress,
 		OwnerID:         ownerID,
 		CreatorID:       creatorID,
 		MetadataURI:     metadataURI,
-		AbstractFeature: abstractFeature,
-		MetadataFeature: metadataFeature,
+		SummaryFeature: summaryFeature,
+		ContentFeature: contentFeature,
 	}
 	result := r.db.Create(&nft)
 	if result.Error != nil {
@@ -75,12 +75,12 @@ func (r *GormNFTRepository) GetNFTsByOwnerID(ownerID uint) ([]*models.NFT, error
 	return nfts, nil
 }
 
-func (r *GormNFTRepository) GetAbstractFeatures(batchSize int) ([][512]float32, error) {
-	var allAbstractFeatures [][512]float32
+func (r *GormNFTRepository) GetSummaryFeatures(batchSize int) ([][512]float32, error) {
+	var allSummaryFeatures [][512]float32
 	var lastID uint = 0
 	for {
 		var batch []models.NFT
-		if err := r.db.Select("id, AbstractFeature").
+		if err := r.db.Select("id, SummaryFeature").
 			Where("id > ?", lastID).
 			Order("id").
 			Limit(batchSize).
@@ -93,7 +93,7 @@ func (r *GormNFTRepository) GetAbstractFeatures(batchSize int) ([][512]float32, 
 		}
 
 		for _, nft := range batch {
-			allAbstractFeatures = append(allAbstractFeatures, nft.AbstractFeature)
+			allSummaryFeatures = append(allSummaryFeatures, nft.SummaryFeature)
 			lastID = nft.ID
 		}
 
@@ -101,15 +101,15 @@ func (r *GormNFTRepository) GetAbstractFeatures(batchSize int) ([][512]float32, 
 			break
 		}
 	}
-	return allAbstractFeatures, nil
+	return allSummaryFeatures, nil
 }
 
-func (r *GormNFTRepository) GetMetadataFeatures(batchSize int) ([][512]float32, error) {
+func (r *GormNFTRepository) GetContentFeatures(batchSize int) ([][512]float32, error) {
 	var allMetadatatFeatures [][512]float32
 	var lastID uint = 0
 	for {
 		var batch []models.NFT
-		if err := r.db.Select("id, MetadataFeature").
+		if err := r.db.Select("id, ContantFeature").
 			Where("id > ?", lastID).
 			Order("id").
 			Limit(batchSize).
@@ -122,7 +122,7 @@ func (r *GormNFTRepository) GetMetadataFeatures(batchSize int) ([][512]float32, 
 		}
 
 		for _, nft := range batch {
-			allMetadatatFeatures = append(allMetadatatFeatures, nft.AbstractFeature)
+			allMetadatatFeatures = append(allMetadatatFeatures, nft.SummaryFeature)
 			lastID = nft.ID
 		}
 

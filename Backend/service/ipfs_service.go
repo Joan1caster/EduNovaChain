@@ -19,8 +19,8 @@ func NewIPFSService(client api.IPFSRepository) *IPFSService {
 	}
 }
 
-func (s *IPFSService) GetData(hash string) (*models.NFTData, error) {
-	var nftMetaData models.NFTData
+func (s *IPFSService) GetData(hash string) (*models.Metadata, error) {
+	var nftMetaData models.Metadata
 	data, err := s.client.GetData(hash)
 	if err != nil {
 		logrus.Errorf("Failed to get data from IPFS: %v", err)
@@ -34,7 +34,7 @@ func (s *IPFSService) GetData(hash string) (*models.NFTData, error) {
 	return &nftMetaData, nil
 }
 
-func (s *IPFSService) UploadData(nftMetaData models.NFTData) (string, error) {
+func (s *IPFSService) UploadData(nftMetaData models.Metadata) (string, error) {
 	jsonData, err := json.Marshal(nftMetaData)
 	if err != nil {
 		logrus.Errorf("Failed to marshal NFT metadata: %v", err)

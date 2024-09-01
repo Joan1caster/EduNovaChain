@@ -11,8 +11,8 @@ type NFT struct {
 	OwnerID         uint         `gorm:"not null"`
 	CreatorID       uint         `gorm:"not null"`
 	MetadataURI     string       `gorm:"not null"`
-	AbstractFeature [512]float32 `gorm:"type:float[];not null"`
-	MetadataFeature [512]float32 `gorm:"type:float[];not null"`
+	SummaryFeature [512]float32 `gorm:"type:float[];not null"`
+	ContentFeature [512]float32 `gorm:"type:float[];not null"`
 	CreatedAt       time.Time
 	UpdatedAt       time.Time
 	Owner           User `gorm:"foreignKey:OwnerID"`

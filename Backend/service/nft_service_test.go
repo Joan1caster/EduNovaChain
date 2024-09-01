@@ -15,8 +15,8 @@ type MockNFTRepository struct {
 	api.NFTRepository
 }
 
-func (m *MockNFTRepository) CreateNFT(tokenID, contractAddress string, ownerID, creatorID uint, metadataURI string, abstractFeature, metadataFeature [512]float32) (uint, error) {
-	args := m.Called(tokenID, contractAddress, ownerID, creatorID, metadataURI, abstractFeature, metadataFeature )
+func (m *MockNFTRepository) CreateNFT(tokenID, contractAddress string, ownerID, creatorID uint, metadataURI string, summaryFeature, contantFeature [512]float32) (uint, error) {
+	args := m.Called(tokenID, contractAddress, ownerID, creatorID, metadataURI, summaryFeature, contantFeature )
 	return args.Get(0).(uint), args.Error(1)
 }
 
@@ -40,9 +40,9 @@ func TestCreateNFT(t *testing.T) {
 	service := NewNFTService(mockNFTRepo)
 
 	mockNFTRepo.On("CreateNFT", "token123", "0x123", uint(1), uint(2), "uri://metadata").Return(uint(1), nil)
-	var abstractFeature [512]float32
-	var metadataFeature [512]float32
-	id, err := service.CreateNFT("token123", "0x123", 1, 2, "uri://metadata", abstractFeature, metadataFeature)
+	var summaryFeature [512]float32
+	var contantFeature [512]float32
+	id, err := service.CreateNFT("token123", "0x123", 1, 2, "uri://metadata", summaryFeature, contantFeature)
 
 	assert.NoError(t, err)
 	assert.Equal(t, uint(1), id)
