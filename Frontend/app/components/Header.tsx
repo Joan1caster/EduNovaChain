@@ -9,7 +9,7 @@ export default function Header() {
   const pathname = usePathname();
 
   return (
-    <header className="px-2 py-4 mb-6 bg-gray-100">
+    <header className="px-2 py-4 mb-1 bg-gray-100">
       <div className="flex justify-between items-center">
         <Link href="/">
           {/* <Image
