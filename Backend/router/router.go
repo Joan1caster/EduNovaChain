@@ -1,18 +1,23 @@
 package routes
 
 import (
-	"github.com/gin-gonic/gin"
-	"gorm.io/gorm"
 	"nftPlantform/config"
 	"nftPlantform/handlers"
 	"nftPlantform/middleware"
 	"nftPlantform/repository"
 	"nftPlantform/service"
+
+	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
 
 func SetupRouter(db *gorm.DB) *gin.Engine {
-	userHandler := handlers.NewUserHandler(service.NewUserService(repository.NewGormUserRepository(db)))
-	ipfsHandler := handlers.NewIPFSHandler(service.NewIPFSService(repository.NewIPFSRepository(config.AppConfig.IpfsApiKey)))
+	userRepo := repository.NewGormUserRepository(db)
+	nftRepo := repository.NewGormNFTRepository(db)
+	ipfsRepo := repository.NewIPFSRepository(config.AppConfig.IpfsApiKey)
+	userHandler := handlers.NewUserHandler(service.NewUserService(userRepo))
+	ipfsHandler := handlers.NewIPFSHandler(service.NewIPFSService(ipfsRepo))
+	nftHandler := handlers.NewNFTHandler(service.NewNFTService(nftRepo), service.NewIPFSService(ipfsRepo))
 	router := gin.Default()
 
 	// 公开路由
@@ -33,7 +38,7 @@ func SetupRouter(db *gorm.DB) *gin.Engine {
 		authenticated.POST("/ipfs/upload", ipfsHandler.UploadData)
 		authenticated.GET("/ipfs/data/:hash", ipfsHandler.GetData)
 		// NFT 相关路由
-		//authenticated.POST("/nfts", h.CreateNFT)
+		authenticated.POST("/nfts", nftHandler.CreateNFT)
 		//authenticated.PUT("/nfts/:id", h.UpdateNFT)
 		//authenticated.DELETE("/nfts/:id", h.DeleteNFT)
 

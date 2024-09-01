@@ -75,7 +75,7 @@ func (s *UserService) GenerateSIWEMessage(walletAddress string) (string, error) 
 	}
 
 	redisClient := database.GetRedis()
-	err = redisClient.Set(context.Background(), "nonce:"+walletAddress, nonce, 5*time.Minute).Err()
+	err = redisClient.Set(context.Background(), "nonce:"+walletAddress, nonce, 60*time.Minute).Err()
 	if err != nil {
 		logrus.Errorf("Failed to store nonce for wallet %s: %v", walletAddress, err)
 		return "", err

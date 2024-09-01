@@ -3,9 +3,10 @@ package repository
 import (
 	"errors"
 
+	"gorm.io/gorm"
+
 	"nftPlantform/api"
 	"nftPlantform/models"
-	"gorm.io/gorm"
 )
 
 type GormNFTRepository struct {
@@ -16,13 +17,15 @@ func NewGormNFTRepository(db *gorm.DB) api.NFTRepository {
 	return &GormNFTRepository{db: db}
 }
 
-func (r *GormNFTRepository) CreateNFT(tokenID, contractAddress string, ownerID, creatorID uint, metadataURI string) (uint, error) {
+func (r *GormNFTRepository) CreateNFT(tokenID, contractAddress string, ownerID, creatorID uint, metadataURI string, abstractFeature, metadataFeature [512]float32) (uint, error) {
 	nft := models.NFT{
 		TokenID:         tokenID,
 		ContractAddress: contractAddress,
 		OwnerID:         ownerID,
 		CreatorID:       creatorID,
 		MetadataURI:     metadataURI,
+		AbstractFeature: abstractFeature,
+		MetadataFeature: metadataFeature,
 	}
 	result := r.db.Create(&nft)
 	if result.Error != nil {
@@ -70,4 +73,62 @@ func (r *GormNFTRepository) GetNFTsByOwnerID(ownerID uint) ([]*models.NFT, error
 		return nil, result.Error
 	}
 	return nfts, nil
+}
+
+func (r *GormNFTRepository) GetAbstractFeatures(batchSize int) ([][512]float32, error) {
+	var allAbstractFeatures [][512]float32
+	var lastID uint = 0
+	for {
+		var batch []models.NFT
+		if err := r.db.Select("id, AbstractFeature").
+			Where("id > ?", lastID).
+			Order("id").
+			Limit(batchSize).
+			Find(&batch).Error; err != nil {
+			return nil, err
+		}
+
+		if len(batch) == 0 {
+			break
+		}
+
+		for _, nft := range batch {
+			allAbstractFeatures = append(allAbstractFeatures, nft.AbstractFeature)
+			lastID = nft.ID
+		}
+
+		if len(batch) < batchSize {
+			break
+		}
+	}
+	return allAbstractFeatures, nil
+}
+
+func (r *GormNFTRepository) GetMetadataFeatures(batchSize int) ([][512]float32, error) {
+	var allMetadatatFeatures [][512]float32
+	var lastID uint = 0
+	for {
+		var batch []models.NFT
+		if err := r.db.Select("id, MetadataFeature").
+			Where("id > ?", lastID).
+			Order("id").
+			Limit(batchSize).
+			Find(&batch).Error; err != nil {
+			return nil, err
+		}
+
+		if len(batch) == 0 {
+			break
+		}
+
+		for _, nft := range batch {
+			allMetadatatFeatures = append(allMetadatatFeatures, nft.AbstractFeature)
+			lastID = nft.ID
+		}
+
+		if len(batch) < batchSize {
+			break
+		}
+	}
+	return allMetadatatFeatures, nil
 }
