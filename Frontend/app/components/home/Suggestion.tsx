@@ -1,6 +1,7 @@
 "use client";
 import { Table_Basic, TagType } from "@/app/types";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import ChangeFollowTopic from "./ChangeFollowTopic";
 
 const topic: TagType[] = [
@@ -62,7 +63,8 @@ const tableData: Table_Basic[] = [
 ];
 
 export default function HomeSuggestion() {
-  const [isAdd, setIsAdd] = useState<boolean>(true);
+  const router = useRouter();
+  const [isAdd, setIsAdd] = useState<boolean>(false);
   const [topics, setTopics] = useState(topic);
   const [currentTopic, setCurrentTopic] = useState<TagType>(topic[0]);
   const [currentType, setCurrentType] = useState<TagType>(types[0]);
@@ -136,7 +138,10 @@ export default function HomeSuggestion() {
                 </thead>
                 <tbody className="bg-white">
                   {tableData.slice(0, 5).map((item) => (
-                    <tr className="*:p-2 *:whitespace-nowrap *:text-xs overflow-hidden cursor-pointer hover:bg-blue-50 rounded-md">
+                    <tr
+                      onClick={() => router.push(`/idea/${item.index}`)}
+                      className="*:p-2 *:whitespace-nowrap *:text-xs overflow-hidden cursor-pointer hover:bg-blue-50 rounded-md"
+                    >
                       <td className="text-gray-400">{item.index}</td>
                       <td>{item.name}</td>
                       <td>{item.publishDate}</td>
@@ -159,7 +164,10 @@ export default function HomeSuggestion() {
                   </thead>
                   <tbody>
                     {tableData.slice(5).map((item) => (
-                      <tr className="*:p-2 *:whitespace-nowrap *:text-xs *:cursor-pointer rounded-md hover:bg-blue-50">
+                      <tr
+                        onClick={() => router.push(`/idea/${item.index}`)}
+                        className="*:p-2 *:whitespace-nowrap *:text-xs *:cursor-pointer rounded-md hover:bg-blue-50"
+                      >
                         <td className="text-gray-400">{item.index}</td>
                         <td>{item.name}</td>
                         <td>{item.publishDate}</td>

@@ -39,7 +39,7 @@ export default function RootLayout({
           </section>
 
           <footer className="p-4 w-full mt-6 bg-blue-700 text-gray-300">
-            <div className="text-center text-sm">
+            <div className="text-center text-sm font-light">
               Copyright © 2024 EduNovaChain.All Rights Reserved.
             </div>
           </footer>
