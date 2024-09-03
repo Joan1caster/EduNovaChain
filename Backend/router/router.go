@@ -46,11 +46,8 @@ func SetupRouter(db *gorm.DB) *gin.Engine {
 		// 订单相关路由
 		authenticated.POST("/orders", orderHandler.ListNFT)
 		authenticated.PUT("/orders/:id", orderHandler.DelistNFT)
-		authenticated.POST("/orders/:id/buy", orderHandler.BuyNFT)
+		// authenticated.POST("/orders/:id/buy", orderHandler.BuyNFT)
 
-		// 用户相关路由
-		//authenticated.GET("/user", h.GetUserProfile)
-		//authenticated.PUT("/user", h.UpdateUserProfile)
 	}
 
 	return router
