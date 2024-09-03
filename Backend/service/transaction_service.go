@@ -50,7 +50,11 @@ func (s *NFTTrade) ExecuteTrade(ctx context.Context, orderID uint, buyerID uint,
 	sagaInstance.AddSubTxDef(
 		"tradition step 1: verify order status",
 		func(ctx context.Context) error {
-			return s.orderService.ValidateOrderStatus(orderID)
+			order, err := s.orderRepo.GetOrderByID(buyerID)
+			if err != nil {
+				return err
+			}
+			return s.orderService.ValidateOrderStatus(orderID, order.Buyer.WalletAddress)
 		},
 		nil, // 无需补偿操作
 	)

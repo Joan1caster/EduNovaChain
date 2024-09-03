@@ -8,6 +8,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"io"
+
+	"github.com/sirupsen/logrus"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
@@ -80,4 +83,25 @@ func BlobToFloat32Array(b []byte) ([512]float32, error) {
         arr[i] = v
     }
     return arr, nil
+}
+
+func SetupLogger() {
+	logrus.SetFormatter(&logrus.TextFormatter{
+		FullTimestamp:          true,                  // 显示完整的时间戳
+		ForceColors:            true,                  // 强制启用颜色输出
+		DisableLevelTruncation: true,                  // 禁用日志级别的截断
+		TimestampFormat:        "2006-01-02 15:04:05", // 设置时间戳格式为"年-月-日 时:分:秒"
+	})
+
+	file, err := os.OpenFile("logs/app.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+	if err == nil {
+		// 只输出到文件
+		// logrus.SetOutput(file)
+		// 如果要同时输出到控制台和文件，请启用下面一行代码
+		logrus.SetOutput(io.MultiWriter(file, os.Stdout))
+	} else {
+		logrus.SetOutput(os.Stdout)
+	}
+
+	logrus.SetLevel(logrus.InfoLevel)
 }
