@@ -16,10 +16,12 @@ func SetupRouter(db *gorm.DB) *gin.Engine {
 	nftRepo := repository.NewGormNFTRepository(db)
 	orderRepo := repository.NewGormOrderRepository(db)
 	ipfsRepo := repository.NewIPFSRepository(config.AppConfig.IpfsApiKey)
+	orderService := service.NewOrderService(nftRepo, orderRepo)
+	nftService := service.NewNFTService(nftRepo)
 	userHandler := handlers.NewUserHandler(service.NewUserService(userRepo))
 	ipfsHandler := handlers.NewIPFSHandler(service.NewIPFSService(ipfsRepo))
-	nftHandler := handlers.NewNFTHandler(service.NewNFTService(nftRepo), service.NewIPFSService(ipfsRepo))
-	orderHandler := handlers.NewOrderHandler(service.NewOrderService(nftRepo, orderRepo), service.NewNFTService(nftRepo))
+	nftHandler := handlers.NewNFTHandler(nftService, service.NewIPFSService(ipfsRepo))
+	orderHandler := handlers.NewOrderHandler(orderService, nftService, service.NewNFTTrade(orderService, nftService, service.NewBlockchainservice()))
 	router := gin.Default()
 
 	// 公开路由
