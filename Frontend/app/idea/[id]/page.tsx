@@ -83,7 +83,7 @@ export default function Page({ params: { id } }: { params: { id: string } }) {
       <div className="flex justify-between items-center my-2">
         <div className="flex items-center gap-1">
           <Image src={info.avator} width={12} height={12} alt={info.author} />
-          <p className="text-[0.7rem] text-blue-400">{info.author}</p>
+          <p className="text-sm text-blue-400">{info.author}</p>
         </div>
         <div className="flex items-end">
           <span className="text-base leading-none">{info.like}</span>
@@ -111,7 +111,7 @@ export default function Page({ params: { id } }: { params: { id: string } }) {
         {/* left start */}
         <div className="h-full flex-1 bg-white rounded-sm shadow-sm p-6">
           <div className="flex justify-between">
-            <ul className="flex w-36 justify-around bg-gray-100 rounded-md *:text-[0.7rem] *:hover:cursor-pointer">
+            <ul className="flex w-36 justify-around bg-gray-100 rounded-md *:text-sm *:hover:cursor-pointer">
               {info_tag.map((item) => (
                 <li
                   className={`w-full py-1 rounded-md text-center ${currentTag.key === item.key ? " bg-gray-200" : " bg-gray-100"}`}
@@ -151,22 +151,18 @@ export default function Page({ params: { id } }: { params: { id: string } }) {
             <div className="my-4">
               {/* basic info start */}
               <h4 className="mt-4">发布日期</h4>
-              <p className="mt-1 text-[0.7rem] text-gray-600">
-                {info.publishDate}
-              </p>
+              <p className="mt-1 text-sm text-gray-600">{info.publishDate}</p>
 
               <h4 className="mt-4">学科分类</h4>
-              <p className="mt-1 text-[0.7rem] text-gray-600">
+              <p className="mt-1 text-sm text-gray-600">
                 {info.gradeName}/{info.subjectName}
               </p>
 
               <h4 className="mt-4">摘要内容</h4>
-              <p className="mt-1 text-[0.7rem] text-gray-600">
-                {info.publishDate}
-              </p>
+              <p className="mt-1 text-sm text-gray-600">{info.publishDate}</p>
 
               <h4 className="mt-4">主题关键词</h4>
-              <p className="mt-1 text-[0.7rem] text-gray-600">
+              <p className="mt-1 text-sm text-gray-600">
                 {info.topicNameList.map((item) => (
                   <span className="text-blue-400 after:content-[';'] last:after:content-none">
                     {item}
@@ -199,11 +195,11 @@ export default function Page({ params: { id } }: { params: { id: string } }) {
           <div className="mt-10">
             <button
               disabled={true}
-              className="w-full rounded-md bg-blue-600 px-6 py-1.5 text-[0.7rem] font-light text-white shadow-sm hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:bg-blue-400 disabled:cursor-not-allowed"
+              className="w-full rounded-md bg-blue-600 px-6 py-1.5 text-sm font-light text-white shadow-sm hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:bg-blue-400 disabled:cursor-not-allowed"
             >
               购买
             </button>
-            <button className="w-full rounded-md bg-gray-100 my-2 px-6 py-1.5 text-[0.7rem] font-light text-gray-600 shadow-sm hover:bg-gray-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-200">
+            <button className="w-full rounded-md bg-gray-100 my-2 px-6 py-1.5 text-sm font-light text-gray-600 shadow-sm hover:bg-gray-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-200">
               加入购物车
             </button>
           </div>
@@ -219,7 +215,7 @@ export default function Page({ params: { id } }: { params: { id: string } }) {
             <h1 className="text-md mb-2">交易记录</h1>
             <table className="w-full">
               <thead>
-                <tr className="*:px-2 *:py-3 *:text-left *:font-normal *:text-[0.7rem] *:text-gray-400 *:uppercase">
+                <tr className="*:px-2 *:py-3 *:text-left *:font-normal *:text-sm *:text-gray-400 *:uppercase">
                   <th>序号</th>
                   <th>交易价格</th>
                   <th>人民币价格</th>
@@ -245,7 +241,7 @@ export default function Page({ params: { id } }: { params: { id: string } }) {
           <div className="w-full">
             <div className="flex justify-between items-end mb-2">
               <h1 className="text-md">{currentType.name}</h1>
-              <ul className="flex w-36 justify-around bg-gray-100 rounded-md *:text-[0.7rem] *:hover:cursor-pointer">
+              <ul className="flex w-36 justify-around bg-gray-100 rounded-md *:text-sm *:hover:cursor-pointer">
                 {types.map((item) => (
                   <li
                     className={`w-full py-1 rounded-md text-center ${currentType.key === item.key ? " bg-gray-200" : " bg-gray-100"}`}
@@ -258,7 +254,7 @@ export default function Page({ params: { id } }: { params: { id: string } }) {
             </div>
             <table className="w-full">
               <thead>
-                <tr className="*:px-2 *:py-3 *:text-left *:font-normal *:text-[0.7rem] *:text-gray-400 *:uppercase">
+                <tr className="*:px-2 *:py-3 *:text-left *:font-normal *:text-sm *:text-gray-400 *:uppercase">
                   <th>序号</th>
                   <th>引用创意名称</th>
                   <th>作者</th>
@@ -366,7 +362,7 @@ export default function Page({ params: { id } }: { params: { id: string } }) {
           <button
             type="submit"
             disabled={true}
-            className="rounded-md bg-blue-600 px-6 py-1 text-[0.7rem] font-light text-white shadow-sm hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:bg-blue-400 disabled:cursor-not-allowed"
+            className="rounded-md bg-blue-600 px-6 py-1 text-sm font-light text-white shadow-sm hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:bg-blue-400 disabled:cursor-not-allowed"
           >
             发表
           </button>
@@ -392,7 +388,7 @@ export default function Page({ params: { id } }: { params: { id: string } }) {
                 </span>
               </p>
             </div>
-            <div className="my-2 text-[0.7rem] text-gray-400">评论</div>
+            <div className="my-2 text-sm text-gray-400">评论</div>
             <div className="flex justify-end items-center">
               <svg
                 t="1725259764914"

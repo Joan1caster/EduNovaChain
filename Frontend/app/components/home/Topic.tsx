@@ -1,6 +1,7 @@
 "use client";
 import { TagType } from "@/app/types";
 import { useState } from "react";
+import Tab from "../Tab";
 
 const topic: TagType[] = [
   { name: "数学", key: 0 },
@@ -16,28 +17,17 @@ const types: TagType[] = [
   { name: "高校", key: 3 },
 ];
 export default function Topic() {
-  const [currentType, setCurrentType] = useState<TagType>(types[0]);
-
-  const onSwitchType = (item: TagType) => {
-    setCurrentType(item);
+  const onChange = (item: TagType) => {
+    //
   };
   return (
-    <div className="w-full my-4 p-4 bg-white rounded shadow-sm">
+    <div className="w-full my-8 p-10 bg-white rounded border border-primary-border">
       {/* header start */}
       <div className="flex justify-between gap-2 items-center">
-        <div>专题广场</div>
+        <div className="text-lg">专题广场</div>
         <div className="flex gap-2">
-          <ul className="flex w-48 justify-around bg-gray-100 rounded-md text-xs *:text-xs *:hover:cursor-pointer">
-            {types.map((item) => (
-              <li
-                className={`w-full py-1 rounded-md text-center ${currentType.key === item.key ? " bg-gray-200" : " bg-gray-100"}`}
-                onClick={() => onSwitchType(item)}
-              >
-                {item.name}
-              </li>
-            ))}
-          </ul>
-          <div className="bg-gray-100 px-2 py-1 rounded-md text-xs cursor-pointer">
+          <Tab data={types} onChange={onChange} />
+          <div className="bg-primary-light_bg px-2 py-1 rounded-md text-xs cursor-pointer">
             查看更多
           </div>
         </div>

@@ -32,13 +32,13 @@ export default function RootLayout({
         <WagmiContext>
           <Header />
 
-          <section className="mx-auto max-w-4xl px-4 py-6 sm:px-6 sm:py-6 lg:max-w-7xl lg:px-8 text-xs">
+          <section className="mx-auto max-w-4xl px-4 py-6 text-[#333] sm:px-6 sm:py-6 lg:max-w-7xl lg:px-8">
             {/* <ConnectButton /> */}
             {children}
             {modal}
           </section>
 
-          <footer className="p-4 w-full mt-6 bg-blue-700 text-gray-300">
+          <footer className="p-4 w-full mt-6 bg-primary text-gray-300">
             <div className="text-center text-sm font-light">
               Copyright © 2024 EduNovaChain.All Rights Reserved.
             </div>

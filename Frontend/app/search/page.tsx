@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Table_Basic, TagType } from "../types";
 import { useRouter } from "next/navigation";
+import { AiTag } from "../components/CustomTag";
 
 const grades: TagType[] = [
   { name: "全部", key: -1 },
@@ -46,6 +47,7 @@ const tableData: Table_Basic[] = [
     name: "创意点子",
     publishDate: "2024-08-31",
     sellPrice: "1.725 ETH",
+    isAi: true
   },
   {
     index: 2,
@@ -106,15 +108,15 @@ export default function Page() {
   return (
     <div className="flex items-start gap-4">
       {/* left start */}
-      <div className="w-64">
+      <div className="w-86">
         <div className="min-h-80 bg-white rounded-sm shadow-sm mb-4">
-          <div className="py-3 text-center bg-gray-50">学科分类</div>
+          <div className="py-4 text-center bg-gray-50">学科分类</div>
           <div className="p-4">
             <div>
               {grades.map((item) => (
                 <span
                   key={item.key}
-                  className={`${currentGrade === item.key ? "text-white bg-blue-500" : "hover:bg-gray-100"} inline-block py-0.5 px-2 mr-1 rounded-sm text-[0.7rem] font-light text-gray-500 cursor-pointer`}
+                  className={`${currentGrade === item.key ? "text-white bg-primary" : "hover:bg-gray-100"} inline-block py-1 px-4 rounded-sm text-sm font-light text-[#666] cursor-pointer`}
                   onClick={() => onChangeGrade(item)}
                 >
                   {item.name}
@@ -126,9 +128,9 @@ export default function Page() {
                 <div className="my-3 flex items-center">
                   <input
                     type="checkbox"
-                    className="form-checkbox mr-1 rounded-sm w-[0.8rem] h-[0.8rem] border-gray-500 focus:ring-offset-0 focus:ring-0"
+                    className="form-checkbox mr-1 rounded-sm w-4 h-4 border-[#979797] focus:ring-offset-0 focus:ring-0"
                   />
-                  <label className="leading-none text-[0.rem] text-gray-500">
+                  <label className="leading-none text-[#666]">
                     {item.name}
                   </label>
                 </div>
@@ -137,17 +139,15 @@ export default function Page() {
           </div>
         </div>
         <div className="min-h-80 bg-white rounded-sm shadow-sm">
-          <div className="py-3 text-center bg-gray-50">主题分类</div>
+          <div className="py-4 text-center bg-gray-50">主题分类</div>
           <div className="px-4 pt-2 pb-4">
             {topics.map((item) => (
               <div className="my-3 flex items-center">
                 <input
                   type="checkbox"
-                  className="form-checkbox mr-1 rounded-sm w-[0.8rem] h-[0.8rem] border-gray-500 focus:ring-offset-0 focus:ring-0"
+                  className="form-checkbox mr-1 rounded-sm w-4 h-4 border-[#979797] focus:ring-offset-0 focus:ring-0"
                 />
-                <label className="leading-none text-[0.rem] text-gray-500">
-                  {item.name}
-                </label>
+                <label className="leading-none text-[#666]">{item.name}</label>
               </div>
             ))}
           </div>
@@ -156,12 +156,12 @@ export default function Page() {
       {/* left end */}
       {/* right start */}
       <div className="flex-1 min-h-[41rem] bg-white rounded-sm shadow-sm">
-        <div className="py-3 px-4 flex justify-between items-center bg-gray-50">
-          <p className="font-light text-[0.7rem]">
-            当前总有<span className="text-sm text-blue-400">12386</span>
+        <div className="py-3 px-4 h-14 flex justify-between items-center bg-gray-50">
+          <p className="font-light text-xs text-[#666]">
+            当前总有<span className="text-primary text-base">12386</span>
             个作品
           </p>
-          <ul className="flex w-36 justify-around bg-gray-100 rounded-md text-xs *:text-xs *:hover:cursor-pointer">
+          <ul className="flex w-36 justify-around bg-gray-100 rounded-md *:text-sm *:hover:cursor-pointer">
             {types.map((item) => (
               <li
                 className={`w-full py-1 rounded-md text-center ${currentType.key === item.key ? " bg-blue-200" : " bg-gray-100"}`}
@@ -175,8 +175,8 @@ export default function Page() {
         <div className="p-4">
           <table className="w-full">
             <thead>
-              <tr className="*:px-2 *:py-3 *:text-left *:font-normal *:text-[0.7rem] *:text-gray-400 *:uppercase">
-                <th className="w-10">序号</th>
+              <tr className="*:px-2 *:py-3 *:text-left *:text-xs *:font-normal *:text-primary-font_9 *:uppercase">
+                <th className="w-12">序号</th>
                 <th className="min-w-36">创意名称</th>
                 <th className="w-24">作者</th>
                 <th className="w-24">发布日期</th>
@@ -190,10 +190,10 @@ export default function Page() {
               {tableData.slice(0, 5).map((item) => (
                 <tr
                   onClick={() => router.push(`/idea/${item.index}`)}
-                  className="*:p-2 *:whitespace-nowrap *:text-xs overflow-hidden cursor-pointer hover:bg-blue-50 rounded-md"
+                  className="*:p-2 *:whitespace-nowrap overflow-hidden cursor-pointer hover:bg-blue-50 rounded-md"
                 >
-                  <td className="text-gray-400 w-10">{item.index}</td>
-                  <td className="min-w-36">{item.name}</td>
+                  <td className="w-12">{item.index}</td>
+                  <td className="min-w-36">{item.name}{item.isAi ? <AiTag /> : <></>}</td>
                   <td className="w-24 text-blue-400">{item.name}</td>
                   <td className="w-24">{item.publishDate}</td>
                   <td className="w-24">{item.sellPrice}</td>

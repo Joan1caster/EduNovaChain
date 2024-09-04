@@ -28,22 +28,25 @@ const Banner = () => {
   };
 
   return (
-    <div>
-      <div className="text-center my-6">New</div>
-      <div className="relative w-full max-w-2xl mx-auto">
+    <div className="w-full bg-[url('/images/slice/banner_bg.png')]">
+      <div className="banner_title">
+        <div className="new_EN">New</div>
+        <div className="new_ZH">最新</div>
+      </div>
+      <div className="relative w-full">
         <div className="overflow-hidden">
           <div
             className="flex justify-between transition-transform duration-500 ease-out"
             style={{ transform: `translateX(-${currentIndex * 33.3333}%)` }} // 修改为33.3333%来实现每次移动1/3
           >
             {slides.map((slide, index) => (
-              <div className="flex-none w-1/3 pr-2" key={index}>
-                <div className="rounded overflow-hidden">
-                  <img
-                    src={slide}
-                    alt={`Slide ${index + 1}`}
-                    className="w-full"
-                  />
+              <div className="flex-none w-1/3 h-[160px] pr-3" key={index}>
+                <div className="relative h-full p-6 rounded overflow-hidden bg-[url('/images/slice/banner_card_bg.jpg')] bg-cover bg-no-repeat">
+                  <p className="text-[20px] text-[#293748]">创意点子标题内容</p>
+                  <p className="my-6 text-[14px] text-[#666]">免费</p>
+                  <p className="absolute right-6 bottom-6 text-[14px] text-right text-[#ABC5EB] font-light">
+                    2024-09-04
+                  </p>
                 </div>
               </div>
             ))}
@@ -56,7 +59,7 @@ const Banner = () => {
               onClick={() =>
                 showSlide((currentIndex - 1 + totalSlides) % totalSlides)
               }
-              className={`${currentIndex === i ? "w-4 bg-blue-400" : "w-1.5 bg-gray-400"} hover:bg-blue-200 h-1.5 rounded`}
+              className={`${currentIndex === i ? "w-6 bg-primary" : "w-2 bg-primary/20"} hover:bg-blue-200 h-2 rounded`}
             ></div>
           ))}
         </div>

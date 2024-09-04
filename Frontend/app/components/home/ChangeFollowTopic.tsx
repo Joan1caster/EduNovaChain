@@ -101,9 +101,9 @@ export default function ChangeFollowTopic({
   return (
     <div>
       <div className="flex justify-between items-center">
-        <div>我关注的主题</div>
+        <div className="text-xl">我关注的主题</div>
         <button
-          className="px-4 py-1 bg-blue-400 rounded-sm text-[0.7rem] text-white"
+          className="px-4 py-1 bg-primary rounded-sm text-sm text-white"
           onClick={() => onUpdateFollowTopics(state.topics)}
         >
           完成
@@ -111,14 +111,14 @@ export default function ChangeFollowTopic({
       </div>
       <div className="flex my-4">
         {/* choiced topics start */}
-        <div className="w-1/3 *:inline-block gap-2 *:text-[0.7rem] *:font-light *:py-0.5 *:px-3 *:mr-2 *:mb-2 *:border *:rounded-full">
+        <div className="w-1/3 *:inline-block gap-2 *:text-sm *:font-light *:py-0.5 *:px-3 *:mr-2 *:mb-4 *:border *:rounded-full">
           {state.topics.map((item) => (
             <div
               key={item.key}
               className={
                 item.key === 0
-                  ? "border-blue-200 text-blue-200"
-                  : "flex items-center gap-2 border-blue-400 text-blue-400"
+                  ? "border-primary/50 text-primary/50"
+                  : "flex items-center gap-2 border-primary text-primary"
               }
               onClick={() =>
                 item.key !== 0 && dispatch({ type: "remove", payload: item })
@@ -138,7 +138,7 @@ export default function ChangeFollowTopic({
                 >
                   <path
                     d="M557.12 512l313.6-313.28a32.128 32.128 0 1 0-45.44-45.44L512 466.88l-313.28-313.6a32.128 32.128 0 0 0-45.44 45.44L466.88 512l-313.6 313.28a32 32 0 0 0 0 45.44 32 32 0 0 0 45.44 0L512 557.12l313.28 313.6a32 32 0 0 0 45.44 0 32 32 0 0 0 0-45.44L557.12 512z"
-                    fill="#60a5fa"
+                    fill="#1474FC"
                     p-id="1693"
                   ></path>
                 </svg>
@@ -149,14 +149,14 @@ export default function ChangeFollowTopic({
         {/* choiced topics end */}
 
         {/* all topics start */}
-        <div className="pl-4 border-l border-l-gray-100">
+        <div className="pl-4 border-l border-l-primary-light_bg/50">
           {/* grade start */}
           <div>
-            <span className="text-sm pr-4">年级</span>
+            <span className="text-base pr-4">年级</span>
             {grades.map((item) => (
               <span
                 key={item.key}
-                className={`${currentGrade === item.key ? "text-blue-500 bg-gray-100" : ""} inline-block py-0.5 px-2 rounded-full text-[0.7rem] font-light text-gray-500 cursor-pointer hover:bg-gray-100`}
+                className={`${currentGrade === item.key ? "text-primary bg-primary-light_bg/50" : ""} inline-block py-1 px-4 rounded-full text-sm font-light text-gray-500 cursor-pointer hover:bg-primary-light_bg/50`}
                 onClick={() => onChangeGrade(item)}
               >
                 {item.name}
@@ -166,12 +166,12 @@ export default function ChangeFollowTopic({
           {/* grade end */}
           {/* subject start */}
 
-          <div className="my-2">
-            <span className="text-sm pr-4">学科</span>
+          <div className="my-4">
+            <span className="text-base pr-4">学科</span>
             {subjects.map((item) => (
               <span
                 key={item.key}
-                className={`${currentSubject === item.key ? "text-blue-500 bg-gray-100" : ""} inline-block py-0.5 px-2 rounded-full text-[0.7rem]  font-light text-gray-500 cursor-pointer hover:bg-gray-100`}
+                className={`${currentSubject === item.key ? "text-primary bg-primary-light_bg/50" : ""} inline-block py-1 px-4 rounded-full text-sm  font-light text-gray-500 cursor-pointer hover:bg-primary-light_bg/50`}
                 onClick={() => onChangeSubject(item)}
               >
                 {item.name}
@@ -180,20 +180,20 @@ export default function ChangeFollowTopic({
           </div>
           {/* sugject end */}
           {/* topic start */}
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-4">
             {topics.map((item) => (
               <>
                 {state.topicKeys.includes(item.key) ? (
                   <div
                     key={item.key}
-                    className="py-1 px-2 rounded-full text-[0.7rem] font-light bg-blue-400 text-white"
+                    className="py-1 px-4 rounded-full text-sm font-light bg-primary text-white"
                   >
                     {item.name}
                   </div>
                 ) : (
                   <div
                     key={item.key}
-                    className="py-1 px-2 rounded-full text-[0.7rem] font-light border border-blue-400 text-blue-400 cursor-pointer"
+                    className="py-1 px-2 rounded-full text-sm font-light border border-primary text-primary cursor-pointer"
                     onClick={() => dispatch({ type: "add", payload: item })}
                   >
                     <svg
@@ -208,7 +208,7 @@ export default function ChangeFollowTopic({
                     >
                       <path
                         d="M892.16 480H544V131.84a32 32 0 0 0-64 0V480H131.84a32 32 0 0 0 0 64H480v348.16a32 32 0 1 0 64 0V544h348.16a32 32 0 1 0 0-64z"
-                        fill="#60a5fa"
+                        fill="#1474FC"
                         p-id="1842"
                       ></path>
                     </svg>
