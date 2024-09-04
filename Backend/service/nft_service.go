@@ -30,9 +30,24 @@ func (s *NFTService) GetNFTDetails(id uint) (*models.NFT, error) {
 	return s.nftRepo.GetNFTByID(id)
 }
 
+func (s *NFTService) GetNFTByClassification(classification string) ([]*models.NFT, error) {
+	return s.nftRepo.GetNFTByClassification(classification)
+}
+
+func (s *NFTService) GetNFTByFeature(feature [512]float32) ([]*models.NFT, error) {
+	var batchsize int = 1000
+	features, err := s.nftRepo.GetSummaryFeatures(batchsize)
+	
+}
+
 // ListNFTsByOwner 列出用户拥有的所有NFT
 func (s *NFTService) ListNFTsByOwner(ownerID uint) ([]*models.NFT, error) {
 	return s.nftRepo.GetNFTsByOwnerID(ownerID)
+}
+
+// ListNFTByCreator 列出所有特定作者的NFT
+func (s *NFTService) ListNFTByCreator(creatorID uint) ([]*models.NFT, error) {
+	return s.nftRepo.GetNFTsByCreatorID(creatorID)
 }
 
 // TransferNFT 转移NFT所有权

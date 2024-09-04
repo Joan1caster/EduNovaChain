@@ -3,6 +3,7 @@ package handlers
 import (
 	"net/http"
 
+	"nftPlantform/models"
 	"nftPlantform/service"
 	"nftPlantform/utils"
 
@@ -108,6 +109,32 @@ func (h *OrderHandler) DelistNFT(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "NFT delisted successfully"})
+}
+
+func (h *OrderHandler) GetHistoryByNFTId(c *gin.Context) {
+	var req struct {
+		nftId uint
+	}
+	if err := c.BindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request"})
+		return
+	}
+
+	orders, err := h.OrderService.GetCompletedOrdersByNFTID(req.nftId)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error":"Failed to select history orders"})
+	}
+
+	if len(orders) == 0 {
+			c.JSON(http.StatusOK, gin.H{"message": "No NFTs found for this creator", "data": []models.Order{}})
+			return
+		}
+
+	c.JSON(http.StatusOK, gin.H{
+		"orders": "orders retrieved successfully",
+		"data":    orders,
+		"count":   len(orders),
+	})
 }
 
 // func (h *OrderHandler) BuyNFT(c *gin.Context) {

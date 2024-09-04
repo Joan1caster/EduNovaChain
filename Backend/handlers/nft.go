@@ -3,7 +3,6 @@ package handlers
 import (
 	"log"
 	"net/http"
-	_ "strconv"
 
 	"github.com/gin-gonic/gin"
 
@@ -54,7 +53,6 @@ func (h *NFTHandler) GetFeatures(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "similarityHigh"})
 		return
 	}
-
 	c.JSON(http.StatusBadRequest, gin.H{"summaryFeature": summaryFeature, "contentFeature": contentFeature})
 }
 
@@ -84,3 +82,99 @@ func (h *NFTHandler) CreateNFT(c *gin.Context) {
 
 	c.JSON(http.StatusCreated, gin.H{"id": nftID})
 }
+
+// get NFT info by id
+func (h *NFTHandler) GetNFTByID (c *gin.Context) {
+	var req struct {
+		NFTId uint `json:"nftId" binging:"required"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	nft, err := h.nftService.GetNFTDetails(req.NFTId)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to select nft details"})
+		return
+	}
+	c.JSON(http.StatusBadRequest, gin.H{"nft": nft})
+}
+
+func (h *NFTHandler) GetNFTsByCreator(c *gin.Context) {
+	var req struct {
+		Creator uint `json:"creator" binding:"required"`
+	}
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body", "details": err.Error()})
+		return
+	}
+
+	nfts, err := h.nftService.ListNFTByCreator(req.Creator)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve NFTs"})
+		return
+	}
+
+	if len(nfts) == 0 {
+		c.JSON(http.StatusOK, gin.H{"message": "No NFTs found for this creator", "data": []models.NFT{}})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "NFTs retrieved successfully",
+		"data":    nfts,
+		"count":   len(nfts),
+	})
+}
+
+func (h *NFTHandler) GetNFTByClassification(c *gin.Context) {
+	var req struct {
+		Classification string `json:"classification"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body", "details": err.Error()})
+		return
+	}
+	nfts, err := h.nftService.GetNFTByClassification(req.Classification)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve NFTs"})
+		return
+	}
+
+	if len(nfts) == 0 {
+		c.JSON(http.StatusOK, gin.H{"message": "No NFTs found for this classification", "data": []models.NFT{}})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "NFTs retrieved successfully",
+		"data":    nfts,
+		"count":   len(nfts),
+	})
+}
+
+func (h *NFTHandler) GetNFTBySummary(c *gin.Context) {
+	var req struct {
+		Summary	string `json:"summary"`
+	}
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body", "details": err.Error()})
+		return
+	}
+
+	if len(req.Summary) == 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "input can not be empty"})
+		return
+	}
+
+	feature, err := utils.GetFeatures([]string{req.Summary})
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "get feature failed"})
+		return
+	}
+
+	nfts, err := h.nftService.GetNFTByFeature(feature)
+}
+

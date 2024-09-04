@@ -10,6 +10,7 @@ type OrderRepository interface {
 	UpdateOrder(order *models.Order) error
 	DeleteOrder(id uint) error
 	GetOpenOrdersByNFTID(nftID uint) ([]*models.Order, error)
+	GetCompletedOrdersByNFTID(nftID uint) ([]*models.Order, error)
 	CompleteOrder(id uint, buyerID uint) error
 	CancelOrder(id uint) error
 	ReopenOrder(id uint) error

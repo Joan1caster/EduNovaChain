@@ -27,29 +27,30 @@ func SetupRouter(db *gorm.DB) *gin.Engine {
 	// 公开路由
 	public := router.Group("/api/v1")
 	{
-		public.GET("/siweMessage", userHandler.GetSIWEMessage)
-		public.POST("/login", userHandler.Login)
-		//public.POST("/auth", h.AuthenticateUser)
-		//public.GET("/nfts", h.GetNFTs)
-		//public.GET("/nfts/:id", h.GetNFTByID)
-		//public.GET("/orders", h.GetOpenOrders)
+		public.GET("/siweMessage", userHandler.GetSIWEMessage) // 签名
+		public.POST("/login", userHandler.Login) // 验证签名并登录
+		
+		public.GET("/nfts/id", nftHandler.GetNFTByID) // 根据NFT id查NFT信息
+		public.GET("/nfts/creator", nftHandler.GetNFTsByCreator) // 根据NFT作者查所有NFT列表
+		public.GET("/nfts/retrieval", nftHandler.GetNFTBySummary) // 根据文字内容查相关NFT列表
+
+		public.GET("/order/history", orderHandler.GetHistoryByNFTId) // 根据NFT id查其交易记录
 	}
 
 	// 需要认证的路由
 	authenticated := router.Group("/api/v1")
 	authenticated.Use(middleware.AuthMiddleware())
 	{
-		authenticated.POST("/ipfs/upload", ipfsHandler.UploadData)
-		authenticated.GET("/ipfs/data/:hash", ipfsHandler.GetData)
+		//ipfs 相关路由
+		authenticated.POST("/ipfs/upload", ipfsHandler.UploadData) // 上传数据到IPFS
+		authenticated.GET("/ipfs/data/:hash", ipfsHandler.GetData) // 从下载数据到本地
 		// NFT 相关路由
-		authenticated.POST("/nfts", nftHandler.CreateNFT)
-		//authenticated.DELETE("/nfts/:id", h.DeleteNFT)
+		authenticated.POST("/nfts", nftHandler.CreateNFT) // 创建NFT
 
 		// 订单相关路由
-		authenticated.POST("/orders", orderHandler.ListNFT)
-		authenticated.PUT("/orders/:id", orderHandler.DelistNFT)
-		// authenticated.POST("/orders/:id/buy", orderHandler.BuyNFT)
-
+		authenticated.POST("/orders", orderHandler.ListNFT) // 上架NFT
+		authenticated.PUT("/orders/delist", orderHandler.DelistNFT) // 下架NFT
+		// authenticated.GET("/orders/:id/buy", orderHandler.BuyNFT) // 购买NFT
 	}
 
 	return router

@@ -2,6 +2,7 @@ package repository
 
 import (
 	"errors"
+	"sort"
 
 	"gorm.io/gorm"
 
@@ -82,6 +83,80 @@ func (r *GormNFTRepository) GetNFTsByOwnerID(ownerID uint) ([]*models.NFT, error
 		return nil, result.Error
 	}
 	return nfts, nil
+}
+
+func (r *GormNFTRepository) GetNFTsByCreatorID(creatorID uint) ([]*models.NFT, error) {
+	var nfts []*models.NFT
+
+	result := r.db.Where("creator_id = ?", creatorID).
+		Preload("Owner").
+		Preload("Creator").
+		Order("created_at DESC").
+		Limit(100).
+		Find(&nfts)
+
+	if result.Error != nil {
+		return nil, result.Error
+	}
+
+	return nfts, nil
+}
+
+func (r *GormNFTRepository) GetNFTByClassification(classification string) ([]*models.NFT, error) {
+	var nfts []*models.NFT
+
+	result := r.db.Where("classification = ?", classification).
+		Limit(100).
+		Find(&nfts)
+
+	if result.Error != nil {
+		return nil, result.Error
+	}
+
+	return nfts, nil
+}
+
+func (r *GormNFTRepository) GetNFTByFeature(feature *[512]float32, similarityThreshold float32) ([]*models.NFTWithSimilarity, error) {
+	var result []*models.NFTWithSimilarity
+	var offset int
+	var lastID uint = 0
+	var batchSize int = 1000
+	for {
+		var batchNFTs []models.NFT
+		if err := r.db.Select("id, SummaryFeature").
+			Where("id > ?", lastID).
+			Order("id").
+			Limit(batchSize).
+			Find(&batchNFTs).Error; err != nil {
+			return nil, err
+		}
+
+		if len(batchNFTs) == 0 || len(result) > 100{
+			break
+		}
+
+		for _, nft := range batchNFTs {
+			summaryFeatureFloat, err := utils.BlobToFloat32Array(nft.SummaryFeature)
+			if err != nil {
+				return nil, err
+			}
+			similarity := utils.CalculateSimilarity(feature, &summaryFeatureFloat)
+
+			if similarity >= similarityThreshold {
+				result = append(result, &models.NFTWithSimilarity{
+					NFT:        &nft,
+					Similarity: similarity,
+				})
+			}
+		}
+
+		offset += batchSize
+	}
+
+	sort.Slice(result, func(i, j int) bool {
+		return result[i].Similarity > result[j].Similarity
+	})
+	return result, nil
 }
 
 func (r *GormNFTRepository) GetSummaryFeatures(batchSize int) ([][512]float32, error) {

@@ -66,6 +66,15 @@ func (s OrderService) GetOrderByID(orderID uint) (*models.Order, error) {
 	return order, nil
 }
 
+func (s OrderService) GetCompletedOrdersByNFTID(nftId uint) ([]*models.Order, error) {
+	var orders []*models.Order
+	orders, err := s.orderRepo.GetCompletedOrdersByNFTID(nftId)
+	if err != nil {
+		return nil, err
+	}
+	return orders, nil
+}
+
 func (s OrderService) CancelOrder(orderID uint) error {
 	err := s.orderRepo.CancelOrder(orderID)
 	if err != nil {

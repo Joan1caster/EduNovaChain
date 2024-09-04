@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"sort"
 )
 
 type RequestBody struct {
@@ -43,10 +44,38 @@ func GetFeatures(words []string) ([][512]float32, error) {
 }
 
 // 计算特征相似度
-func CalculateSimilarity(a, b [512]float32) float32 {
+func CalculateSimilarity(a, b *[512]float32) float32 {
 	var result float32
 	for i := 0; i < 512; i++ {
 		result += a[i] * b[i]
 	}
 	return result
+}
+
+type VectorWithSimilarity struct {
+    Vector    [512]float32
+    Similarity float32
+}
+
+// SortVectorsBySimilarity sorts the vectors by their similarity to the given vector
+func SortVectorsBySimilarity(vectors *[][512]float32, targetVector *[512]float32, limit int) [][512]float32 {
+    // Create a slice of VectorWithSimilarity
+    vectorsWithSimilarity := make([]VectorWithSimilarity, len(*vectors))
+    for i, v := range *vectors {
+        similarity := CalculateSimilarity(&v, targetVector)
+        vectorsWithSimilarity[i] = VectorWithSimilarity{v, similarity}
+    }
+
+    // Sort the slice based on similarity (in descending order)
+    sort.Slice(vectorsWithSimilarity, func(i, j int) bool {
+        return vectorsWithSimilarity[i].Similarity > vectorsWithSimilarity[j].Similarity
+    })
+
+    // Take the top 'limit' results
+    result := make([][512]float32, 0, limit)
+    for i := 0; i < limit && i < len(vectorsWithSimilarity); i++ {
+        result = append(result, vectorsWithSimilarity[i].Vector)
+    }
+
+    return result
 }
