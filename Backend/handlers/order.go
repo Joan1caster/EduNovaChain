@@ -12,12 +12,14 @@ import (
 type OrderHandler struct {
 	OrderService *service.OrderService
 	nftService   *service.NFTService
+	tradeService   *service.NFTTrade
 }
 
-func NewOrderHandler(OrderService *service.OrderService, nftService *service.NFTService) *OrderHandler {
+func NewOrderHandler(OrderService *service.OrderService, nftService *service.NFTService, tradeService *service.NFTTrade) *OrderHandler {
 	return &OrderHandler{
 		OrderService: OrderService,
 		nftService:   nftService,
+		tradeService: tradeService,
 	}
 }
 
