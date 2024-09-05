@@ -16,21 +16,15 @@ export default function Header() {
     <header className="px-10 py-4 mb-1">
       <div className="flex justify-between items-center text-primary">
         <Link href="/">
-          {/* <Image
-        src="/vercel.svg"
-        alt="Vercel Logo"
-        width={100}
-        height={24}
-        priority
-      /> */}
-          <img
-            className="mx-auto h-5 w-auto inline-block mr-2"
-            src="https://tailwindui.com/img/logos/mark.svg?color=indigo&shade=600"
-            alt="Your Company"
+          <Image
+            src="/images/slice/logo_01.png"
+            alt="Vercel Logo"
+            width={250}
+            height={64}
+            priority
           />
-          {process.env.NEXT_PUBLIC_APP_NAME}
         </Link>
-        <div className="flex-1 ml-4 flex gap-6 items-center">
+        <div className="flex-1 ml-6 flex gap-6 items-center">
           <Link
             href="/"
             className={`text-md ${pathname === "/" ? "text-black" : "text-primary-font_9"} hover:text-black`}
@@ -69,7 +63,7 @@ export default function Header() {
             </div>
           </div>
         </div>
-        <div className="w-1/2 bg-transparent flex justify-between">
+        <div className="w-1/3 bg-transparent flex justify-between">
           <div className="w-52 rounded bg-white py-1 pr-2 flex gap-2 justify-between">
             <input
               value={keywords}
