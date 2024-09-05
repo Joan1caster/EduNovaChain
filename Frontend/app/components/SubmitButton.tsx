@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { useFormStatus } from 'react-dom';
+import { useFormStatus } from "react-dom";
 
 export default function SubmitButton({
   children,
@@ -13,7 +13,7 @@ export default function SubmitButton({
     <button
       type="submit"
       aria-disabled={pending}
-      className="flex w-full justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+      className="w-full rounded-md bg-primary px-10 py-2 mx-auto font-semibold text-white shadow-sm hover:bg-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-light/50 disabled:bg-primary-light/50 disabled:cursor-not-allowed"
     >
       {children}
     </button>

@@ -1,23 +1,23 @@
-'use client';
-import SubmitButton from '@/app/components/SubmitButton';
-import Link from 'next/link';
-import { useFormState } from 'react-dom';
-import { login } from '../actions';
+"use client";
+import SubmitButton from "@/app/components/SubmitButton";
+import Link from "next/link";
+import { useFormState } from "react-dom";
+import { login } from "../actions";
 
 const initialState = {};
 
 export default function LoginPage() {
   const [state, formAction] = useFormState(login, initialState);
   return (
-    <div className="flex min-h-full flex-col justify-center px-6 py-12 lg:px-8">
+    <div>
       <div className="sm:mx-auto sm:w-full sm:max-w-sm">
-        <img
+        {/* <img
           className="mx-auto h-10 w-auto"
           src="https://tailwindui.com/img/logos/mark.svg?color=indigo&shade=600"
           alt="Your Company"
-        />
+        /> */}
         <h2 className="mt-10 text-center text-2xl font-bold leading-9 tracking-tight text-gray-900">
-          Log in to your account
+          登录
         </h2>
       </div>
 
@@ -28,7 +28,7 @@ export default function LoginPage() {
               htmlFor="email"
               className="block text-sm font-medium leading-6 text-gray-900"
             >
-              Email address
+              邮箱
             </label>
             <div className="mt-2">
               <input
@@ -37,7 +37,7 @@ export default function LoginPage() {
                 type="email"
                 autoComplete="email"
                 required
-                className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-primary sm:text-sm sm:leading-6"
               />
             </div>
           </div>
@@ -48,14 +48,11 @@ export default function LoginPage() {
                 htmlFor="password"
                 className="block text-sm font-medium leading-6 text-gray-900"
               >
-                Password
+                密码
               </label>
               <div className="text-sm">
-                <a
-                  href="#"
-                  className="font-semibold text-indigo-600 hover:text-indigo-500"
-                >
-                  Forgot password?
+                <a href="#" className="font-semibold text-primary">
+                  忘记密码？
                 </a>
               </div>
             </div>
@@ -66,18 +63,18 @@ export default function LoginPage() {
                 type="password"
                 autoComplete="current-password"
                 required
-                className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-primary sm:text-sm sm:leading-6"
               />
             </div>
           </div>
 
-          <SubmitButton>Log in</SubmitButton>
+          <SubmitButton>登录</SubmitButton>
         </form>
 
         <p className="mt-10 text-center text-sm text-gray-500">
-          Not a member?
-          <span className="font-semibold leading-6 text-indigo-600 hover:text-indigo-500">
-            <Link href="/account/signup">Let&apos;s create your account.</Link>
+          还没有账号?
+          <span className="font-semibold leading-6 text-primary">
+            <Link href="/account/signup">立即注册</Link>
           </span>
         </p>
       </div>
