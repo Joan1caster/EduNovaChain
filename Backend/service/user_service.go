@@ -5,22 +5,23 @@ import (
 	"errors"
 	"time"
 
+	"nftPlantform/config"
+	"nftPlantform/internal/database"
+	"nftPlantform/models"
+	"nftPlantform/repository"
+	"nftPlantform/utils"
+
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/sirupsen/logrus"
 	"github.com/spruceid/siwe-go"
 	"gorm.io/gorm"
-	"nftPlantform/api"
-	"nftPlantform/config"
-	"nftPlantform/internal/database"
-	"nftPlantform/models"
-	"nftPlantform/utils"
 )
 
 type UserService struct {
-	userRepo api.UserRepository
+	userRepo *repository.GormUserRepository
 }
 
-func NewUserService(userRepo api.UserRepository) *UserService {
+func NewUserService(userRepo *repository.GormUserRepository) *UserService {
 	return &UserService{userRepo: userRepo}
 }
 
@@ -162,4 +163,8 @@ func (s *UserService) Login(messageStr, signature string) (*models.User, string,
 
 	logrus.Infof("User %s logged in successfully", wallet)
 	return user, tokenString, nil
+}
+
+func (s *UserService) GetUserMostVisitedTopic(userID uint) (*models.Topic, error) {
+	return s.userRepo.GetUserMostVisitedTopic(userID)
 }

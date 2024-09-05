@@ -6,7 +6,7 @@ import (
 
 	"gorm.io/gorm"
 
-	"nftPlantform/api"
+	_"nftPlantform/api"
 	"nftPlantform/models"
 	"nftPlantform/utils"
 )
@@ -15,7 +15,7 @@ type GormNFTRepository struct {
 	db *gorm.DB
 }
 
-func NewGormNFTRepository(db *gorm.DB) api.NFTRepository {
+func NewGormNFTRepository(db *gorm.DB) *GormNFTRepository {
 	return &GormNFTRepository{db: db}
 }
 
@@ -56,6 +56,28 @@ func (r *GormNFTRepository) GetNFTByID(id uint) (*models.NFT, error) {
 	return &nft, nil
 }
 
+func (r *GormNFTRepository) GetLatestNFT(number uint) (*[]models.NFT, error) {
+	var nfts []models.NFT
+	result := r.db.Order("created_at DESC").Limit(3).Find(&nfts)
+    if result.Error != nil {
+        return nil, result.Error
+    }
+    return &nfts, nil
+}
+
+func (r *GormNFTRepository) GetFavoriteTopic(userID uint) (*models.Topic, error) {
+	var topics []models.Topic
+	err := r.db.Table("topics").
+		Select("topics.id, topics.name, user_topic_visits.visit_count").
+		Joins("INNER JOIN user_topic_visits ON topics.id = user_topic_visits.topic_id").
+		Where("user_topic_visits.user_id = ?", userID).
+		Order("user_topic_visits.visit_count DESC").
+		Limit(1).
+		Find(&topics).Error
+
+	return &topics[0], err
+}
+
 func (r *GormNFTRepository) GetNFTByTokenID(tokenID string) (*models.NFT, error) {
 	var nft models.NFT
 	result := r.db.Where("token_id = ?", tokenID).First(&nft)
@@ -66,14 +88,6 @@ func (r *GormNFTRepository) GetNFTByTokenID(tokenID string) (*models.NFT, error)
 		return nil, result.Error
 	}
 	return &nft, nil
-}
-
-func (r *GormNFTRepository) UpdateNFT(nft *models.NFT) error {
-	return r.db.Save(nft).Error
-}
-
-func (r *GormNFTRepository) DeleteNFT(id uint) error {
-	return r.db.Delete(&models.NFT{}, id).Error
 }
 
 func (r *GormNFTRepository) GetNFTsByOwnerID(ownerID uint) ([]*models.NFT, error) {
@@ -100,6 +114,17 @@ func (r *GormNFTRepository) GetNFTsByCreatorID(creatorID uint) ([]*models.NFT, e
 	}
 
 	return nfts, nil
+}
+
+func (r *GormNFTRepository) GetMostVisitedNFTsInTopic(topicID uint, limit int) ([]models.NFT, error) {
+	var nfts []models.NFT
+	err := r.db.Table("nfts").
+		Joins("JOIN nft_topics ON nfts.id = nft_topics.nft_id").
+		Where("nft_topics.topic_id = ?", topicID).
+		Order("nfts.view_count DESC").  // 假设 NFT 模型有 view_count 字段
+		Limit(limit).
+		Find(&nfts).Error
+	return nfts, err
 }
 
 func (r *GormNFTRepository) GetNFTByClassification(classification string) ([]*models.NFT, error) {
@@ -223,4 +248,13 @@ func (r *GormNFTRepository) GetContentFeatures(batchSize int) ([][512]float32, e
 		}
 	}
 	return allMetadatatFeatures, nil
+}
+
+
+func (r *GormNFTRepository) UpdateNFT(nft *models.NFT) error {
+	return r.db.Save(nft).Error
+}
+
+func (r *GormNFTRepository) DeleteNFT(id uint) error {
+	return r.db.Delete(&models.NFT{}, id).Error
 }

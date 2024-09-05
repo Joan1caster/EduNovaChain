@@ -28,11 +28,13 @@ func SetupRouter(db *gorm.DB) *gin.Engine {
 	public := router.Group("/api/v1")
 	{
 		public.GET("/siweMessage", userHandler.GetSIWEMessage) // 签名
-		public.POST("/login", userHandler.Login) // 验证签名并登录
-		
-		public.GET("/nfts/id", nftHandler.GetNFTByID) // 根据NFT id查NFT信息
-		public.GET("/nfts/creator", nftHandler.GetNFTsByCreator) // 根据NFT作者查所有NFT列表
-		public.GET("/nfts/retrieval", nftHandler.GetNFTBySummary) // 根据文字内容查相关NFT列表
+		public.POST("/login", userHandler.Login)               // 验证签名并登录
+
+		public.GET("/nfts/id", nftHandler.GetNFTByID)               // 根据NFT id查NFT信息
+		public.GET("/nfts/creator", nftHandler.GetNFTsByCreator)    // 根据NFT作者查所有NFT列表
+		public.GET("/nfts/retrieval", nftHandler.GetNFTBySummary)   // 根据文字内容查相关NFT列表
+		public.GET("/nfts/latest/:number", nftHandler.GetLatestNFT) // 根据文字内容查相关NFT列表
+		public.GET("/nfts/latest/:number", nftHandler.GetLatestNFT) // 根据文字内容查相关NFT列表
 
 		public.GET("/order/history", orderHandler.GetHistoryByNFTId) // 根据NFT id查其交易记录
 	}
@@ -41,6 +43,8 @@ func SetupRouter(db *gorm.DB) *gin.Engine {
 	authenticated := router.Group("/api/v1")
 	authenticated.Use(middleware.AuthMiddleware())
 	{
+		//user's router
+		authenticated.GET("/user/favorite", userHandler.GetFavoriteTopic) // Query users’ favorite topics
 		//ipfs 相关路由
 		authenticated.POST("/ipfs/upload", ipfsHandler.UploadData) // 上传数据到IPFS
 		authenticated.GET("/ipfs/data/:hash", ipfsHandler.GetData) // 从下载数据到本地
@@ -48,7 +52,7 @@ func SetupRouter(db *gorm.DB) *gin.Engine {
 		authenticated.POST("/nfts", nftHandler.CreateNFT) // 创建NFT
 
 		// 订单相关路由
-		authenticated.POST("/orders", orderHandler.ListNFT) // 上架NFT
+		authenticated.POST("/orders", orderHandler.ListNFT)         // 上架NFT
 		authenticated.PUT("/orders/delist", orderHandler.DelistNFT) // 下架NFT
 		// authenticated.GET("/orders/:id/buy", orderHandler.BuyNFT) // 购买NFT
 	}

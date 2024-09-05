@@ -3,6 +3,7 @@ package handlers
 import (
 	"log"
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 
@@ -154,6 +155,25 @@ func (h *NFTHandler) GetNFTByClassification(c *gin.Context) {
 	})
 }
 
+func (h *NFTHandler) GetLatestNFT(c *gin.Context) {
+	numberStr := c.Param("number")
+    number, err := strconv.Atoi(numberStr)
+    if err != nil || number <= 0 {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid number parameter"})
+        return
+    }
+	nfts, err := h.nftService.GetLatestNFT(uint(number))
+	if err != nil || len(*nfts) == 0 {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve NFTs"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{
+		"message": "NFTs retrieved successfully",
+		"data":    nfts,
+		"count":   len(*nfts),
+	})
+}
+
 func (h *NFTHandler) GetNFTBySummary(c *gin.Context) {
 	var req struct {
 		Summary	string `json:"summary"`
@@ -169,12 +189,12 @@ func (h *NFTHandler) GetNFTBySummary(c *gin.Context) {
 		return
 	}
 
-	feature, err := utils.GetFeatures([]string{req.Summary})
+	_, err := utils.GetFeatures([]string{req.Summary})
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "get feature failed"})
 		return
 	}
 
-	nfts, err := h.nftService.GetNFTByFeature(feature)
+	// nfts, err := h.nftService.GetNFTByFeature(feature)
 }
 

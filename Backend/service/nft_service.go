@@ -5,16 +5,16 @@ import (
 	"runtime"
 	"sync"
 
-	"nftPlantform/api"
+	"nftPlantform/repository"
 	"nftPlantform/models"
 	"nftPlantform/utils"
 )
 
 type NFTService struct {
-	nftRepo api.NFTRepository
+	nftRepo *repository.GormNFTRepository
 }
 
-func NewNFTService(nftRepo api.NFTRepository) *NFTService {
+func NewNFTService(nftRepo *repository.GormNFTRepository) *NFTService {
 	return &NFTService{
 		nftRepo: nftRepo,
 	}
@@ -30,14 +30,18 @@ func (s *NFTService) GetNFTDetails(id uint) (*models.NFT, error) {
 	return s.nftRepo.GetNFTByID(id)
 }
 
+// 根据分类查询NFT
 func (s *NFTService) GetNFTByClassification(classification string) ([]*models.NFT, error) {
 	return s.nftRepo.GetNFTByClassification(classification)
 }
 
-func (s *NFTService) GetNFTByFeature(feature [512]float32) ([]*models.NFT, error) {
-	var batchsize int = 1000
-	features, err := s.nftRepo.GetSummaryFeatures(batchsize)
-	
+// get latest number of NFT
+func (s *NFTService) GetLatestNFT(number uint) (*[]models.NFT, error) {
+	return s.nftRepo.GetLatestNFT(number)
+}
+
+func (s *NFTService) GetFavoriteTopic(userID uint) (*models.Topic,error) {
+	return s.nftRepo.GetFavoriteTopic(userID)
 }
 
 // ListNFTsByOwner 列出用户拥有的所有NFT
@@ -91,7 +95,7 @@ func (s *NFTService) CheckSimilarity(feature [512]float32, threshold float32, ba
 	if len(allFeatures) < numCPU*4 {
 		// 对于小数据集，使用单线程处理
 		for _, vec := range allFeatures {
-			if utils.CalculateSimilarity(vec, feature) > threshold {
+			if utils.CalculateSimilarity(&vec, &feature) > threshold {
 				return true, nil
 			}
 		}
@@ -113,7 +117,7 @@ func (s *NFTService) CheckSimilarity(feature [512]float32, threshold float32, ba
 		go func(start, end int) {
 			defer wg.Done()
 			for _, vec := range allFeatures[start:end] {
-				if utils.CalculateSimilarity(vec, feature) > threshold {
+				if utils.CalculateSimilarity(&vec, &feature) > threshold {
 					select {
 					case resultChan <- true:
 					default:

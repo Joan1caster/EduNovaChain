@@ -2,9 +2,9 @@ package repository
 
 import (
 	"errors"
+
 	"gorm.io/gorm"
 
-	"nftPlantform/api"
 	"nftPlantform/models"
 )
 
@@ -12,7 +12,7 @@ type GormUserRepository struct {
 	db *gorm.DB
 }
 
-func NewGormUserRepository(db *gorm.DB) api.UserRepository {
+func NewGormUserRepository(db *gorm.DB) *GormUserRepository {
 	return &GormUserRepository{db: db}
 }
 
@@ -28,6 +28,24 @@ func (r *GormUserRepository) CreateUser(username, email, passwordHash, walletAdd
 		return 0, result.Error
 	}
 	return user.ID, nil
+}
+
+func (r *GormUserRepository) GetUserMostVisitedTopic(userID uint) (*models.Topic, error) {
+	var topic models.Topic
+	err := r.db.Table("topics").
+		Joins("JOIN user_topics ON topics.id = user_topics.topic_id").
+		Where("user_topics.user_id = ?", userID).
+		Order("topics.total_visits DESC").
+		First(&topic).Error
+
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, errors.New("user have no concerned topic") // 用户没有关注的主题
+		}
+		return nil, err
+	}
+
+	return &topic, nil
 }
 
 func (r *GormUserRepository) GetUserByUsername(username string) (*models.User, error) {

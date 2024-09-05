@@ -24,6 +24,20 @@ func NewOrderHandler(OrderService *service.OrderService, nftService *service.NFT
 	}
 }
 
+// LatestNFT godoc
+// @Description latest NFT list for sale
+// @Tags nft
+// @Accept Null
+// @Produce json
+// @Param Null
+// @Success 200 {object} map[string]interface{}
+// @Failure 400 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router /nft/list [post]
+func(h *OrderHandler) LatestNFT(c *gin.Context) {
+	
+}
+
 // ListNFT godoc
 // @Summary List an NFT for sale
 // @Description Create a new order to list an NFT for sale

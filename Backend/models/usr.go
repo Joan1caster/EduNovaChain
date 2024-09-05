@@ -1,8 +1,9 @@
 package models
 
 import (
-	"github.com/golang-jwt/jwt/v4"
 	"time"
+
+	"github.com/golang-jwt/jwt/v4"
 )
 
 type User struct {
@@ -11,6 +12,9 @@ type User struct {
 	Email         string `gorm:"unique;not null"`
 	PasswordHash  string `gorm:"not null"`
 	WalletAddress string `gorm:"unique;not null"`
+	Topics        []Topic `gorm:"many2many:user_topics;"` 
+	OwnedNFTs     []NFT   `gorm:"foreignKey:OwnerID"`
+	CreatedNFTs   []NFT   `gorm:"foreignKey:CreatorID"`
 	CreatedAt     time.Time
 	UpdatedAt     time.Time
 }

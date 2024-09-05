@@ -1,11 +1,12 @@
 package handlers
 
 import (
-	"github.com/gin-gonic/gin"
 	"net/http"
 	"nftPlantform/models"
 	"nftPlantform/service"
 	"nftPlantform/utils"
+
+	"github.com/gin-gonic/gin"
 )
 
 type UserHandler struct {
@@ -14,6 +15,17 @@ type UserHandler struct {
 
 func NewUserHandler(userService *service.UserService) *UserHandler {
 	return &UserHandler{userService: userService}
+}
+
+func (h *UserHandler) GetFavoriteTopic(c *gin.Context) {
+	userID, _ := c.Get("userID")
+	topic, err := h.userService.GetUserMostVisitedTopic(userID.(uint))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create NFT"})
+		return
+	}
+
+	c.JSON(http.StatusCreated, gin.H{"topic": topic})
 }
 
 func (u *UserHandler) GetSIWEMessage(c *gin.Context) {
