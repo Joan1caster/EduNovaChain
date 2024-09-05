@@ -39,7 +39,12 @@ export default function RootLayout({
             {modal}
           </section>
 
-          <Footer />
+          <footer className="p-4 w-full mt-6 bg-primary text-gray-300">
+            <div className="text-center text-sm font-light">
+              Copyright © 2024 {process.env.NEXT_PUBLIC_APP_NAME}.All Rights
+              Reserved.
+            </div>
+          </footer>
         </WagmiContext>
       </body>
     </html>
