@@ -13,8 +13,8 @@ export default function Header() {
   const [keywords, setKeywords] = useState("");
 
   return (
-    <header className="px-2 py-4 mb-1">
-      <div className="flex justify-between items-center">
+    <header className="px-10 py-4 mb-1">
+      <div className="flex justify-between items-center text-primary">
         <Link href="/">
           {/* <Image
         src="/vercel.svg"
@@ -28,7 +28,7 @@ export default function Header() {
             src="https://tailwindui.com/img/logos/mark.svg?color=indigo&shade=600"
             alt="Your Company"
           />
-          EduNovaChain
+          {process.env.NEXT_PUBLIC_APP_NAME}
         </Link>
         <div className="flex-1 ml-4 flex gap-6 items-center">
           <Link
