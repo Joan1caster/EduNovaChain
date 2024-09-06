@@ -7,7 +7,6 @@ import (
 
 	"nftPlantform/internal/database"
 	"nftPlantform/utils"
-	_ "nftPlantform/service"
 )
 
 

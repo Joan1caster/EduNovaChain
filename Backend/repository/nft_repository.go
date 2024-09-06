@@ -2,12 +2,14 @@ package repository
 
 import (
 	"errors"
+	"fmt"
 	"sort"
 
 	"gorm.io/gorm"
 
-	_"nftPlantform/api"
+	_ "nftPlantform/api"
 	"nftPlantform/models"
+	"nftPlantform/models/dto"
 	"nftPlantform/utils"
 )
 
@@ -116,6 +118,47 @@ func (r *GormNFTRepository) GetNFTsByCreatorID(creatorID uint) ([]*models.NFT, e
 	return nfts, nil
 }
 
+func (r *GormNFTRepository) GetNFTByTopicAndType(topicId, typeId *uint, limit uint) (*[]models.NFT, error) {
+	var nfts *[]models.NFT
+    
+    query := r.db.Model(&models.NFT{})
+    
+    // Join with nft_topics table to filter by topics
+	var category string
+	if topicId != nil {
+		
+		switch *typeId {
+		case 0:
+			category = string(models.CategoryNewest)
+		case 1:
+			category = string(models.CategoryHot)
+		case 2:
+			category = string(models.CategoryBestseller)
+		}
+		query = query.Joins("JOIN nft_topics ON nfts.id = nft_topics.nft_id").
+						Where("nft_topics.topics IN ?", topicId)
+	}
+	query = query.Where("nft_categories.categories IN ?", category)
+    
+    // Execute the query and scan results into nfts slice
+    err := query.Distinct().Find(&nfts).Error
+    if err != nil {
+        return nil, err
+    }
+    
+    return nfts, nil
+}
+
+func (r *GormNFTRepository) GetGrade() (*[]dto.IDName, error) {
+	var grades *[]dto.IDName
+
+	result := r.db.Model(&models.Grade{}).Select("id", "name").Find(&grades)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	return grades, nil	
+}
+
 func (r *GormNFTRepository) GetMostVisitedNFTsInTopic(topicID uint, limit int) ([]models.NFT, error) {
 	var nfts []models.NFT
 	err := r.db.Table("nfts").
@@ -125,6 +168,31 @@ func (r *GormNFTRepository) GetMostVisitedNFTsInTopic(topicID uint, limit int) (
 		Limit(limit).
 		Find(&nfts).Error
 	return nfts, err
+}
+
+func (r *GormNFTRepository) GetTopicBySubjectAndGrade(subjectID, gradeID *uint) ([]dto.IDName, error) {
+    var results []dto.IDName
+
+    query := r.db.Table("topics").
+        Select("DISTINCT topics.id, topics.name").
+        Joins("JOIN nft_topics ON topics.id = nft_topics.topic_id").
+        Joins("JOIN nfts ON nfts.id = nft_topics.nft_id")
+
+    if subjectID != nil {
+        query = query.Joins("JOIN nft_subjects ON nfts.id = nft_subjects.nft_id").
+            Where("nft_subjects.subject_id = ?", *subjectID)
+    }
+
+    if gradeID != nil {
+        query = query.Joins("JOIN nft_grades ON nfts.id = nft_grades.nft_id").
+            Where("nft_grades.grade_id = ?", *gradeID)
+    }
+
+    if err := query.Find(&results).Error; err != nil {
+        return nil, err
+    }
+
+    return results, nil
 }
 
 func (r *GormNFTRepository) GetNFTByClassification(classification string) ([]*models.NFT, error) {
@@ -139,6 +207,21 @@ func (r *GormNFTRepository) GetNFTByClassification(classification string) ([]*mo
 	}
 
 	return nfts, nil
+}
+
+func (r *GormNFTRepository) GetSubjectByGrade(gradeId uint) (*[]models.Subject, error) {
+	var subjects *[]models.Subject
+	err := r.db.Model(&models.Subject{}).
+        Distinct().
+        Joins("JOIN nft_subjects ON subjects.id = nft_subjects.subject_id").
+        Joins("JOIN nfts ON nfts.id = nft_subjects.nft_id").
+        Joins("JOIN nft_grades ON nfts.id = nft_grades.nft_id").
+        Where("nft_grades.grade_id = ?", gradeId).
+        Find(&subjects).Error
+	if err != nil {
+		return nil, err
+	}
+	return subjects, err
 }
 
 func (r *GormNFTRepository) GetNFTByFeature(feature *[512]float32, similarityThreshold float32) ([]*models.NFTWithSimilarity, error) {
@@ -258,3 +341,69 @@ func (r *GormNFTRepository) UpdateNFT(nft *models.NFT) error {
 func (r *GormNFTRepository) DeleteNFT(id uint) error {
 	return r.db.Delete(&models.NFT{}, id).Error
 }
+
+
+func (r *GormNFTRepository)CategorizationTask() error {
+    // Categorize Hot NFTs (Top 100 by ViewCount)
+    if err := categorizeHotNFTs(r.db); err != nil {
+        return fmt.Errorf("error categorizing hot NFTs: %w", err)
+    }
+
+    // Categorize Bestseller NFTs (Top 100 by TransactionCount)
+    if err := categorizeBestsellerNFTs(r.db); err != nil {
+        return fmt.Errorf("error categorizing bestseller NFTs: %w", err)
+    }
+
+    // Categorize Newest NFTs (Top 100 by CreateTime)
+    if err := categorizeNewestNFTs(r.db); err != nil {
+        return fmt.Errorf("error categorizing newest NFTs: %w", err)
+    }
+
+    return nil
+}
+
+func categorizeHotNFTs(db *gorm.DB) error {
+    var nfts []models.NFT
+    if err := db.Order("view_count desc").Limit(100).Find(&nfts).Error; err != nil {
+        return err
+    }
+
+    for _, nft := range nfts {
+        if err := updateNFTCategory(db, nft.ID, models.CategoryHot); err != nil {
+            return err
+        }
+    }
+    return nil
+}
+
+func categorizeBestsellerNFTs(db *gorm.DB) error {
+    var nfts []models.NFT
+    if err := db.Order("transaction_count desc").Limit(100).Find(&nfts).Error; err != nil {
+        return err
+    }
+
+    for _, nft := range nfts {
+        if err := updateNFTCategory(db, nft.ID, models.CategoryBestseller); err != nil {
+            return err
+        }
+    }
+    return nil
+}
+
+func categorizeNewestNFTs(db *gorm.DB) error {
+    var nfts []models.NFT
+    if err := db.Order("created_at desc").Limit(100).Find(&nfts).Error; err != nil {
+        return err
+    }
+
+    for _, nft := range nfts {
+        if err := updateNFTCategory(db, nft.ID, models.CategoryNewest); err != nil {
+            return err
+        }
+    }
+    return nil
+}
+
+func updateNFTCategory(db *gorm.DB, nftID uint, category models.NFTCategory) error {
+    return db.Model(&models.NFT{}).Where("id = ?", nftID).
+            UpdateColumn("categories", gorm.Expr("ARRAY(SELECT DISTINCT UNNEST(ARRAY_APPEND(categories, ?)))", category)).Error}

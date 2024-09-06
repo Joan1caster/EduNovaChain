@@ -18,11 +18,15 @@ func SetupRouter(db *gorm.DB) *gin.Engine {
 	ipfsRepo := repository.NewIPFSRepository(config.AppConfig.IpfsApiKey)
 	orderService := service.NewOrderService(nftRepo, orderRepo)
 	nftService := service.NewNFTService(nftRepo)
+	blockChainService := service.NewBlockchainservice()
+	tradeService := service.NewNFTTrade(orderService, nftService, blockChainService)
 	userHandler := handlers.NewUserHandler(service.NewUserService(userRepo))
 	ipfsHandler := handlers.NewIPFSHandler(service.NewIPFSService(ipfsRepo))
 	nftHandler := handlers.NewNFTHandler(nftService, service.NewIPFSService(ipfsRepo))
-	orderHandler := handlers.NewOrderHandler(orderService, nftService, service.NewNFTTrade(orderService, nftService, service.NewBlockchainservice()))
+	orderHandler := handlers.NewOrderHandler(orderService, nftService, tradeService)
 	router := gin.Default()
+
+	nftService.UpdateNFTCategory(3600) // 启动一个异步函数来处理NFT的分类,每小时更新一次
 
 	// 公开路由
 	public := router.Group("/api/v1")
@@ -30,11 +34,14 @@ func SetupRouter(db *gorm.DB) *gin.Engine {
 		public.GET("/siweMessage", userHandler.GetSIWEMessage) // 签名
 		public.POST("/login", userHandler.Login)               // 验证签名并登录
 
-		public.GET("/nfts/id", nftHandler.GetNFTByID)               // 根据NFT id查NFT信息
-		public.GET("/nfts/creator", nftHandler.GetNFTsByCreator)    // 根据NFT作者查所有NFT列表
-		public.GET("/nfts/retrieval", nftHandler.GetNFTBySummary)   // 根据文字内容查相关NFT列表
-		public.GET("/nfts/latest/:number", nftHandler.GetLatestNFT) // 根据文字内容查相关NFT列表
-		public.GET("/nfts/latest/:number", nftHandler.GetLatestNFT) // 根据文字内容查相关NFT列表
+		public.GET("/nfts/id", nftHandler.GetNFTByID)            // 根据NFT id查NFT信息
+		public.GET("/nfts/creator", nftHandler.GetNFTsByCreator) // 根据NFT作者查所有NFT列表
+		// public.GET("/nfts/retrieval", nftHandler.GetNFTBySummary)   // 根据文字内容查相关NFT列表
+		public.GET("/nfts/latest/:number", nftHandler.GetLatestNFT)         // 返回最新的number个NFT
+		public.GET("/nfts/topicAndType", nftHandler.GetNFTByTopicAndType) // 根据主题和类型查询NFT
+		public.GET("/grade", nftHandler.GetGradeList) // 查询年级
+		public.GET("/subject/:grade", nftHandler.GetSubjectByGrade)    // 根据年级查学科
+		public.GET("/topic/subjectandgrade", nftHandler.GetTopicBySubjectAndGrade)    // 根据年级\学科查主题
 
 		public.GET("/order/history", orderHandler.GetHistoryByNFTId) // 根据NFT id查其交易记录
 	}

@@ -2,11 +2,14 @@ package service
 
 import (
 	"errors"
+	"log"
 	"runtime"
 	"sync"
+	"time"
 
-	"nftPlantform/repository"
 	"nftPlantform/models"
+	"nftPlantform/models/dto"
+	"nftPlantform/repository"
 	"nftPlantform/utils"
 )
 
@@ -35,6 +38,11 @@ func (s *NFTService) GetNFTByClassification(classification string) ([]*models.NF
 	return s.nftRepo.GetNFTByClassification(classification)
 }
 
+// 根据年级查学科
+func (s *NFTService) GetSubjectByGrade(grade uint) (*[]models.Subject, error) {
+	return s.nftRepo.GetSubjectByGrade(grade)
+}
+
 // get latest number of NFT
 func (s *NFTService) GetLatestNFT(number uint) (*[]models.NFT, error) {
 	return s.nftRepo.GetLatestNFT(number)
@@ -52,6 +60,18 @@ func (s *NFTService) ListNFTsByOwner(ownerID uint) ([]*models.NFT, error) {
 // ListNFTByCreator 列出所有特定作者的NFT
 func (s *NFTService) ListNFTByCreator(creatorID uint) ([]*models.NFT, error) {
 	return s.nftRepo.GetNFTsByCreatorID(creatorID)
+}
+
+func (s *NFTService) GetNFTByTopicAndType(topicId *uint, typeId *uint, limit uint) (*[]models.NFT, error) {
+	return s.nftRepo.GetNFTByTopicAndType(topicId, typeId, limit)
+}
+
+func (s *NFTService) GetTopicBySubjectAndGrade(subjectId, gradeId *uint) ([]dto.IDName, error) {
+	return s.nftRepo.GetTopicBySubjectAndGrade(subjectId, gradeId)
+}
+
+func (s *NFTService) GetGrade() (*[]dto.IDName, error) {
+	return s.nftRepo.GetGrade()
 }
 
 // TransferNFT 转移NFT所有权
@@ -78,6 +98,25 @@ func (s *NFTService) UpdateNFTMetadata(nftID uint, newMetadataURI string) error 
 
 	nft.MetadataURI = newMetadataURI
 	return s.nftRepo.UpdateNFT(nft)
+}
+
+// UpdateNFTCategory 启动一个goroutine来定期更新NFT分类
+func (s *NFTService) UpdateNFTCategory(interval int) error {
+    go func(interval int) {
+        ticker := time.NewTicker(time.Duration(interval) * time.Second)
+        defer ticker.Stop()
+
+        for {
+            select {
+            case <-ticker.C:
+                if err := s.nftRepo.CategorizationTask(); err != nil {
+                    log.Printf("Error during categorization task: %v", err)
+                }
+            }
+        }
+    }(interval)
+
+    return nil
 }
 
 // 计算NFT的相似度，超过阈值的返回true，否则返回false

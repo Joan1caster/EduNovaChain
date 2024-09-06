@@ -63,8 +63,8 @@ func (h *NFTHandler) CreateNFT(c *gin.Context) {
 		TokenID         string       `json:"tokenId" binding:"required"`
 		ContractAddress string       `json:"contractAddress" binding:"required"`
 		MetadataURI     string       `json:"metadataUri" binding:"required"`
-		SummaryFeature [512]float32 `json:"summaryFeature" binding:"required"`
-		ContentFeature [512]float32 `json:"metadata" binding:"required"`
+		SummaryFeature  [512]float32 `json:"summaryFeature" binding:"required"`
+		ContentFeature  [512]float32 `json:"metadata" binding:"required"`
 	}
 
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -85,7 +85,7 @@ func (h *NFTHandler) CreateNFT(c *gin.Context) {
 }
 
 // get NFT info by id
-func (h *NFTHandler) GetNFTByID (c *gin.Context) {
+func (h *NFTHandler) GetNFTByID(c *gin.Context) {
 	var req struct {
 		NFTId uint `json:"nftId" binging:"required"`
 	}
@@ -157,11 +157,11 @@ func (h *NFTHandler) GetNFTByClassification(c *gin.Context) {
 
 func (h *NFTHandler) GetLatestNFT(c *gin.Context) {
 	numberStr := c.Param("number")
-    number, err := strconv.Atoi(numberStr)
-    if err != nil || number <= 0 {
-        c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid number parameter"})
-        return
-    }
+	number, err := strconv.Atoi(numberStr)
+	if err != nil || number <= 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid number parameter"})
+		return
+	}
 	nfts, err := h.nftService.GetLatestNFT(uint(number))
 	if err != nil || len(*nfts) == 0 {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve NFTs"})
@@ -174,9 +174,100 @@ func (h *NFTHandler) GetLatestNFT(c *gin.Context) {
 	})
 }
 
+func (h *NFTHandler) GetNFTByTopicAndType(c *gin.Context) {
+	var req struct {
+		TopicId *uint `json:"topicId"`
+		TypeId  *uint `json:"typeId"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body", "details": err.Error()})
+		return
+	}
+	limit := uint(10)
+	nfts, err := h.nftService.GetNFTByTopicAndType(req.TopicId, req.TypeId, limit)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"message": "Get NFT By Topic And Type from database error"})
+	}
+	if len(*nfts) == 0 {
+		c.JSON(http.StatusOK, gin.H{"message": "No NFTs found for this classification", "data": []models.NFT{}})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "NFTs retrieved successfully",
+		"data":    nfts,
+		"count":   len(*nfts),
+	})
+}
+
+func (h *NFTHandler) GetGradeList(c *gin.Context) {
+	grades, err := h.nftService.GetGrade()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"message": "Get grade from database error"})
+		return
+	}
+	if len(*grades) == 0 {
+		c.JSON(http.StatusOK, gin.H{"message": "No grades found from database"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{
+		"message": "grades retrieved successfully",
+		"data":    grades,
+		"count":   len(*grades),
+	})
+}
+
+func (h *NFTHandler) GetSubjectByGrade(c *gin.Context) {
+	gradeStr := c.Param("grade")
+	gradeId, err := strconv.Atoi(gradeStr)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"message": "input data form error", "data": gradeStr})
+	}
+	subjects, err := h.nftService.GetSubjectByGrade(uint(gradeId))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"message": "GetSubjectByGrade from database error"})
+	}
+	if len(*subjects) == 0 {
+		c.JSON(http.StatusOK, gin.H{"message": "No NFTs found for this classification", "data": []models.NFT{}})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "NFTs retrieved successfully",
+		"data":    subjects,
+		"count":   len(*subjects),
+	})
+}
+
+func (h *NFTHandler) GetTopicBySubjectAndGrade(c *gin.Context) {
+	var req struct {
+		SubjectId *uint `json: subjectId`
+		GradeId *uint `json: gradeId`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body", "details": err.Error()})
+		return
+	}
+	topics, err := h.nftService.GetTopicBySubjectAndGrade(req.SubjectId, req.GradeId)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"message": "GetTopicBySubjectAndGrade from database error"})
+	}
+	if len(*topics) == 0 {
+		c.JSON(http.StatusOK, gin.H{"message": "No NFTs found for this classification", "data": []models.NFT{}})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "NFTs retrieved successfully",
+		"data":    topics,
+		"count":   len(*topics),
+	})
+
+}
+
 func (h *NFTHandler) GetNFTBySummary(c *gin.Context) {
 	var req struct {
-		Summary	string `json:"summary"`
+		Summary string `json:"summary"`
 	}
 
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -197,4 +288,3 @@ func (h *NFTHandler) GetNFTBySummary(c *gin.Context) {
 
 	// nfts, err := h.nftService.GetNFTByFeature(feature)
 }
-
