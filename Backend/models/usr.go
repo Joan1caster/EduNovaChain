@@ -7,16 +7,18 @@ import (
 )
 
 type User struct {
-	ID            uint   `gorm:"primaryKey"`
-	Username      string `gorm:"unique;not null"`
-	Email         string `gorm:"unique;not null"`
-	PasswordHash  string `gorm:"not null"`
-	WalletAddress string `gorm:"unique;not null"`
-	Topics        []Topic `gorm:"many2many:user_topics;"` 
+	ID            uint    `gorm:"primaryKey"`
+	Username      string  `gorm:"unique;not null"`
+	Email         string  `gorm:"unique;not null"`
+	PasswordHash  string  `gorm:"not null"`
+	WalletAddress string  `gorm:"unique;not null"`
+	Topics        []Topic `gorm:"many2many:user_topics;"`
 	OwnedNFTs     []NFT   `gorm:"foreignKey:OwnerID"`
 	CreatedNFTs   []NFT   `gorm:"foreignKey:CreatorID"`
-	CreatedAt     time.Time
-	UpdatedAt     time.Time
+	Likes         []Like  `gorm:"foreignKey:UserID"`
+
+	CreatedAt time.Time
+	UpdatedAt time.Time
 }
 
 type Claims struct {

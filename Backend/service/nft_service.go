@@ -4,6 +4,7 @@ import (
 	"errors"
 	"log"
 	"runtime"
+	"sort"
 	"sync"
 	"time"
 
@@ -24,13 +25,91 @@ func NewNFTService(nftRepo *repository.GormNFTRepository) *NFTService {
 }
 
 // CreateNFT 创建新的NFT
-func (s *NFTService) CreateNFT(tokenID, contractAddress string, ownerID, creatorID uint, metadataURI string, summaryFeature, metadataFeature [512]float32) (uint, error) {
-	return s.nftRepo.CreateNFT(tokenID, contractAddress, ownerID, creatorID, metadataURI, summaryFeature, metadataFeature)
+func (s *NFTService) CreateNFT(tokenID, contractAddress string, ownerID, creatorID uint, metadataURI string, summaryFeature, metadataFeature [512]float32, grade, subject, topic string) (uint, error) {
+	grade_, err := s.nftRepo.FindOrCreateGrade(grade)
+	if err != nil {
+		return 0, err
+	}
+
+	subject_, err := s.nftRepo.FindOrCreateSubject(subject)
+	if err != nil {
+		return 0, err
+	}
+
+	topic_, err := s.nftRepo.FindOrCreateTopic(topic)
+	if err != nil {
+		return 0, err
+	}
+
+	return s.nftRepo.CreateNFT(tokenID, contractAddress, ownerID, creatorID, metadataURI, summaryFeature, metadataFeature, grade_, subject_, topic_)
 }
 
 // GetNFTDetails 获取NFT详情
 func (s *NFTService) GetNFTDetails(id uint) (*models.NFT, error) {
+	s.nftRepo.IncrementNFTCount(id, "view")
 	return s.nftRepo.GetNFTByID(id)
+}
+
+// 点赞
+func (s *NFTService) LikeNFTByID(userID, nftID uint) (error) {
+	return s.nftRepo.LikeNFTByID(userID, nftID)
+}
+
+// 通过NFT的详细信息查询
+func (s *NFTService) GetNFTByDetails(query dto.NFTQuery) ([]*models.NFT, error) {
+	nfts, err := s.nftRepo.GetNFTByDetails(query)
+	if err != nil {
+		return nil, err
+	}
+	var res []*models.NFT
+	if query.Keyword != nil {
+		var nftsWithSimilarity []*models.NFTWithSimilarity
+		targetFeature, err := utils.GetFeatures([]string{*query.Keyword})
+		if err != nil {
+			return nil, err
+		}
+		for i, nft := range nfts {
+			// 将 []byte 转换为 []float32
+			summaryFeature, err := utils.BlobToFloat32Array(nft.SummaryFeature)
+			if err != nil {
+				return nil, err
+			}
+			// 计算相似度（这里使用余弦相似度作为示例）
+			similarity := utils.CalculateSimilarity(&targetFeature[0], &summaryFeature)
+
+			nftsWithSimilarity[i] = &models.NFTWithSimilarity{
+				NFT:        nft,
+				Similarity: similarity,
+			}
+		}
+
+		// 根据相似度排序
+		sort.Slice(nftsWithSimilarity, func(i, j int) bool {
+			return nftsWithSimilarity[i].Similarity > nftsWithSimilarity[j].Similarity
+		})
+		for _, value := range nftsWithSimilarity {
+			res = append(res, value.NFT)
+		}
+	}
+	// 实现分页逻辑
+	totalNFTs := len(res)
+	pageSize := int(*query.PageSize)
+	page := int(*query.Page)
+
+	// 计算起始和结束索引
+	startIndex := (page - 1) * pageSize
+	endIndex := startIndex + pageSize
+
+	// 检查索引是否越界
+	if startIndex >= totalNFTs {
+		return []*models.NFT{}, nil // 返回空切片
+	}
+	if endIndex > totalNFTs {
+		endIndex = totalNFTs
+	}
+
+	// 返回分页后的结果
+	return res[startIndex:endIndex], nil
 }
 
 // 根据分类查询NFT
@@ -48,7 +127,7 @@ func (s *NFTService) GetLatestNFT(number uint) (*[]models.NFT, error) {
 	return s.nftRepo.GetLatestNFT(number)
 }
 
-func (s *NFTService) GetFavoriteTopic(userID uint) (*models.Topic,error) {
+func (s *NFTService) GetFavoriteTopic(userID uint) (*models.Topic, error) {
 	return s.nftRepo.GetFavoriteTopic(userID)
 }
 
@@ -102,21 +181,21 @@ func (s *NFTService) UpdateNFTMetadata(nftID uint, newMetadataURI string) error 
 
 // UpdateNFTCategory 启动一个goroutine来定期更新NFT分类
 func (s *NFTService) UpdateNFTCategory(interval int) error {
-    go func(interval int) {
-        ticker := time.NewTicker(time.Duration(interval) * time.Second)
-        defer ticker.Stop()
+	go func(interval int) {
+		ticker := time.NewTicker(time.Duration(interval) * time.Second)
+		defer ticker.Stop()
 
-        for {
-            select {
-            case <-ticker.C:
-                if err := s.nftRepo.CategorizationTask(); err != nil {
-                    log.Printf("Error during categorization task: %v", err)
-                }
-            }
-        }
-    }(interval)
+		for {
+			select {
+			case <-ticker.C:
+				if err := s.nftRepo.CategorizationTask(); err != nil {
+					log.Printf("Error during categorization task: %v", err)
+				}
+			}
+		}
+	}(interval)
 
-    return nil
+	return nil
 }
 
 // 计算NFT的相似度，超过阈值的返回true，否则返回false

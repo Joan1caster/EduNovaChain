@@ -5,12 +5,14 @@ import (
 	"nftPlantform/models"
 	"nftPlantform/service"
 	"nftPlantform/utils"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
 
 type UserHandler struct {
 	userService *service.UserService
+	nftService  *service.NFTService
 }
 
 func NewUserHandler(userService *service.UserService) *UserHandler {
@@ -18,10 +20,15 @@ func NewUserHandler(userService *service.UserService) *UserHandler {
 }
 
 func (h *UserHandler) GetFavoriteTopic(c *gin.Context) {
-	userID, _ := c.Get("userID")
-	topic, err := h.userService.GetUserMostVisitedTopic(userID.(uint))
+	wallet := c.Query("wallet")
+	user, err := h.userService.GetUserByWallet(wallet)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create NFT"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to exe GetUserByWallet "})
+		return
+	}
+	topic, err := h.userService.GetUserMostVisitedTopic(user.ID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to exe GetUserMostVisitedTopic "})
 		return
 	}
 
@@ -35,6 +42,34 @@ func (u *UserHandler) GetSIWEMessage(c *gin.Context) {
 		utils.Error(c, http.StatusInternalServerError, err.Error())
 	}
 	utils.Success(c, message)
+}
+
+func (u *UserHandler) CheckAuth(c *gin.Context) {
+	wallet, exists := c.Get("wallet")
+	if !exists {
+		utils.Error(c, http.StatusUnauthorized, "用户未登录")
+		return
+	}
+
+	nftID := c.Param("nftID")
+	intNftID, err := strconv.Atoi(nftID)
+	if err != nil {
+		utils.Error(c, http.StatusBadRequest, "无效的 NFT ID")
+		return
+	}
+
+	nft, err := u.nftService.GetNFTDetails(uint(intNftID))
+	if err != nil {
+		utils.Error(c, http.StatusInternalServerError, "获取 NFT 详情失败")
+		return
+	}
+
+	if nft.Owner.WalletAddress != wallet {
+		utils.Error(c, http.StatusUnauthorized, "无权限访问此 NFT")
+		return
+	}
+
+	utils.Success(c, gin.H{"authority": true})
 }
 
 func (u *UserHandler) Login(c *gin.Context) {

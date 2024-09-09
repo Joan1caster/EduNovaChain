@@ -16,5 +16,6 @@ type Order struct {
 	Seller    User      `gorm:"foreignKey:SellerID"`
 	Buyer     *User     `gorm:"foreignKey:BuyerID"`
 	NFT       NFT       `gorm:"foreignKey:NFTID"`
+	
 }
 

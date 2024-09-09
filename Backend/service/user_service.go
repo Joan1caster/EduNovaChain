@@ -86,6 +86,15 @@ func (s *UserService) GenerateSIWEMessage(walletAddress string) (string, error) 
 	return message.String(), nil
 }
 
+// 根据钱包查地址
+func (s *UserService) GetUserByWallet(walletAddress string) (*models.User, error) {
+	user, err := s.userRepo.GetUserByWalletAddress(walletAddress)
+	if err != nil {
+		return &models.User{}, err
+	}
+	return user, nil
+}
+
 // Login 登录
 func (s *UserService) Login(messageStr, signature string) (*models.User, string, error) {
 	// 解析消息

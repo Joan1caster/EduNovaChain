@@ -14,6 +14,7 @@ import (
 )
 
 type TransactionListener struct {
+	NFTID        uint
 	OrderID      uint
 	BuyerID      uint
 	TxHash       string
@@ -71,7 +72,7 @@ func (s *NFTTrade) ExecuteTrade(ctx context.Context, orderID uint, buyerID uint,
 			if err != nil {
 				return err
 			}
-			s.startTransactionListener(orderID, buyerID, txHash)
+			s.startTransactionListener(order.NFTID, orderID, buyerID, txHash)
 			return err
 		},
 		func(ctx context.Context) error {
@@ -121,8 +122,9 @@ func (s *NFTTrade) ExecuteTrade(ctx context.Context, orderID uint, buyerID uint,
 	return nil
 }
 
-func (s *NFTTrade) startTransactionListener(orderID, buyerID uint, txHash string) {
+func (s *NFTTrade) startTransactionListener(nftID, orderID, buyerID uint, txHash string) {
 	listener := &TransactionListener{
+		NFTID:        nftID,
 		OrderID:      orderID,
 		BuyerID:      buyerID,
 		TxHash:       txHash,
@@ -153,6 +155,7 @@ func (s *NFTTrade) monitorTransaction(listener *TransactionListener) {
 			if varifiedInfo.status != "UNCONFIRMED" {
 				s.completeTransaction(listener.OrderID, listener.BuyerID)
 				close(listener.CompleteChan)
+				s.nftService.nftRepo.IncrementNFTCount(listener.NFTID, "transaction_count")
 				return
 			}
 		case <-listener.StopChan:

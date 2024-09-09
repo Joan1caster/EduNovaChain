@@ -3,18 +3,18 @@ package service
 import (
 	"errors"
 
-	"nftPlantform/api"
 	"nftPlantform/models"
+	"nftPlantform/repository"
 )
 
 type OrderService struct {
-	nftRepo   api.NFTRepository
-	orderRepo api.OrderRepository
+	nftRepo   *repository.GormNFTRepository
+	orderRepo *repository.GormOrderRepository
 }
 
 func NewOrderService(
-	nftRepo api.NFTRepository,
-	orderRepo api.OrderRepository,
+	nftRepo *repository.GormNFTRepository,
+	orderRepo *repository.GormOrderRepository,
 ) *OrderService {
 
 	return &OrderService{
@@ -38,10 +38,6 @@ func (s *OrderService) ListNFTForSale(sellerID, nftID uint, price float64) (uint
 }
 
 func (s *OrderService) ValidateOrderStatus(orderID uint, sellerWallet string) error {
-	if s.orderRepo == nil {
-		return errors.New("order repository is not initialized")
-	}
-
 	order, err := s.orderRepo.GetOrderByID(orderID)
 	if err != nil {
 		return errors.New("error fetching order")

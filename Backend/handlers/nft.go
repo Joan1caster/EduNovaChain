@@ -8,6 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"nftPlantform/models"
+	"nftPlantform/models/dto"
 	"nftPlantform/service"
 	"nftPlantform/utils"
 )
@@ -15,6 +16,7 @@ import (
 type NFTHandler struct {
 	nftService  *service.NFTService
 	ipfsService *service.IPFSService
+	userService *service.UserService
 }
 
 func NewNFTHandler(nftService *service.NFTService, ipfsService *service.IPFSService) *NFTHandler {
@@ -59,29 +61,48 @@ func (h *NFTHandler) GetFeatures(c *gin.Context) {
 
 // CreateNFT handles the creation of a new NFT
 func (h *NFTHandler) CreateNFT(c *gin.Context) {
-	var req struct {
-		TokenID         string       `json:"tokenId" binding:"required"`
-		ContractAddress string       `json:"contractAddress" binding:"required"`
-		MetadataURI     string       `json:"metadataUri" binding:"required"`
-		SummaryFeature  [512]float32 `json:"summaryFeature" binding:"required"`
-		ContentFeature  [512]float32 `json:"metadata" binding:"required"`
-	}
+	var req dto.CreateNFT
 
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
+	wallet, _ := c.Get("wallet")
+	user, err := h.userService.GetUserByWallet(wallet.(string))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to GetUserByWallet"})
+		return
+	}
+	creatorID := user.ID
 
-	// Get the user ID from the authenticated context
-	userID, _ := c.Get("userID")
-	creatorID := userID.(uint)
-	nftID, err := h.nftService.CreateNFT(req.TokenID, req.ContractAddress, creatorID, creatorID, req.MetadataURI, req.SummaryFeature, req.ContentFeature)
+	nftID, err := h.nftService.CreateNFT(req.TokenID, req.ContractAddress, creatorID, creatorID, req.MetadataURI, req.SummaryFeature, req.ContentFeature, req.Grade, req.Subject, req.Topic)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create NFT"})
 		return
 	}
 
 	c.JSON(http.StatusCreated, gin.H{"id": nftID})
+}
+
+func (h *NFTHandler) LikeNFT(c *gin.Context) {
+	nftID := c.Param("nftID")
+	uintnftID, err := strconv.Atoi(nftID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get param: nftID"})
+		return
+	}
+	wallet, _ := c.Get("wallet")
+	user, err := h.userService.GetUserByWallet(wallet.(string))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to GetUserByWallet"})
+		return
+	}
+
+	err = h.nftService.LikeNFTByID(user.ID, uint(uintnftID))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to Like NFT"})
+		return
+	}
 }
 
 // get NFT info by id
@@ -239,10 +260,32 @@ func (h *NFTHandler) GetSubjectByGrade(c *gin.Context) {
 	})
 }
 
+func (h *NFTHandler) GetNFTByDetails(c *gin.Context) {
+	var req dto.NFTQuery
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body", "details": err.Error()})
+		return
+	}
+	nfts, err := h.nftService.GetNFTByDetails(req)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"message": "GetNFTByDetails from database error"})
+	}
+	if len(nfts) == 0 {
+		c.JSON(http.StatusOK, gin.H{"message": "No NFTs found for this classification", "data": []models.NFT{}})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "NFTs retrieved successfully",
+		"data":    nfts,
+		"count":   len(nfts),
+	})
+}
+
 func (h *NFTHandler) GetTopicBySubjectAndGrade(c *gin.Context) {
 	var req struct {
-		SubjectId *uint `json: subjectId`
-		GradeId *uint `json: gradeId`
+		SubjectId *uint `json:"subjectId"`
+		GradeId   *uint `json:"gradeId"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body", "details": err.Error()})
@@ -252,17 +295,16 @@ func (h *NFTHandler) GetTopicBySubjectAndGrade(c *gin.Context) {
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"message": "GetTopicBySubjectAndGrade from database error"})
 	}
-	if len(*topics) == 0 {
-		c.JSON(http.StatusOK, gin.H{"message": "No NFTs found for this classification", "data": []models.NFT{}})
+	if len(topics) == 0 {
+		c.JSON(http.StatusOK, gin.H{"message": "No NFTs found for this classification", "data": []dto.IDName{}})
 		return
 	}
 
 	c.JSON(http.StatusOK, gin.H{
 		"message": "NFTs retrieved successfully",
 		"data":    topics,
-		"count":   len(*topics),
+		"count":   len(topics),
 	})
-
 }
 
 func (h *NFTHandler) GetNFTBySummary(c *gin.Context) {

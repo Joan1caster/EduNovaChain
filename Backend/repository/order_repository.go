@@ -3,7 +3,6 @@ package repository
 import (
 	"errors"
 
-	"nftPlantform/api"
 	"nftPlantform/models"
 
 	"gorm.io/gorm"
@@ -13,7 +12,7 @@ type GormOrderRepository struct {
 	db *gorm.DB
 }
 
-func NewGormOrderRepository(db *gorm.DB) api.OrderRepository {
+func NewGormOrderRepository(db *gorm.DB) *GormOrderRepository {
 	return &GormOrderRepository{db: db}
 }
 
@@ -33,7 +32,7 @@ func (r *GormOrderRepository) CreateOrder(sellerID, nftID uint, price float64) (
 
 func (r *GormOrderRepository) GetOrderByID(id uint) (*models.Order, error) {
 	if r.db == nil {
-		return nil, errors.New("Database connection not initialized")
+		return nil, errors.New("database connection not initialized")
 	}
 
 	var order models.Order
@@ -73,7 +72,6 @@ func (r *GormOrderRepository) GetCompletedOrdersByNFTID(nftID uint) ([]*models.O
 	}
 	return orders, nil
 }
-
 
 func (r *GormOrderRepository) CompleteOrder(id uint, buyerID uint) error {
 	return r.db.Model(&models.Order{}).Where("id = ?", id).Updates(map[string]interface{}{

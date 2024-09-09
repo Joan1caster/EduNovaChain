@@ -30,8 +30,17 @@ type NFT struct {
 	Owner            User          `gorm:"foreignKey:OwnerID"`
 	Creator          User          `gorm:"foreignKey:CreatorID"`
 	LikeCount        uint          `gorm:"default:0"` // 点赞次数
+	Likes            []Like        `gorm:"foreignKey:NFTID"`
 	ViewCount        uint          `gorm:"default:0"` // 浏览次数
 	TransactionCount uint          `gorm:"default:0"` // 交易次数
+}
+
+type Like struct {
+	gorm.Model
+	UserID uint `gorm:"index:idx_user_nft,unique"`
+	NFTID  uint `gorm:"index:idx_user_nft,unique"`
+	User   User `gorm:"foreignKey:UserID"`
+	NFT    NFT  `gorm:"foreignKey:NFTID"`
 }
 
 type Grade struct {
