@@ -67,7 +67,7 @@ func (s *UserService) GenerateSIWEMessage(walletAddress string) (string, error) 
 	statement := "Welcome to nftPlantform!"
 	options := map[string]interface{}{
 		"statement": statement,
-		"chainId":   "1",
+		"chainId":   "11155111",
 	}
 	message, err := siwe.InitMessage(domain, walletAddress, uri, nonce, options)
 	if err != nil {

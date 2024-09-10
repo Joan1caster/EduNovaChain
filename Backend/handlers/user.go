@@ -40,6 +40,7 @@ func (u *UserHandler) GetSIWEMessage(c *gin.Context) {
 	message, err := u.userService.GenerateSIWEMessage(wallet)
 	if err != nil {
 		utils.Error(c, http.StatusInternalServerError, err.Error())
+		return
 	}
 	utils.Success(c, message)
 }
