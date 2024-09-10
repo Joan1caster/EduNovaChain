@@ -1,7 +1,6 @@
 package models
 
 import (
-	"time"
 
 	"gorm.io/gorm"
 )
@@ -63,17 +62,4 @@ type Topic struct {
 	NFTs        []NFT  `gorm:"many2many:nft_topics;"`
 	Users       []User `gorm:"many2many:user_topics;"`
 	TotalVisits uint   `gorm:"default:0"`
-}
-
-type UserTopicVisit struct {
-	gorm.Model
-	UserID        uint `gorm:"index:idx_user_topic,unique"`
-	TopicID       uint `gorm:"index:idx_user_topic,unique"`
-	VisitCount    uint `gorm:"default:1"`
-	LastVisitTime time.Time
-}
-
-type NFTWithSimilarity struct {
-	*NFT
-	Similarity float32
 }

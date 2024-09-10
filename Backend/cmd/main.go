@@ -7,6 +7,7 @@ import (
 	"github.com/gin-contrib/cors"
 
 	"nftPlantform/config"
+	"nftPlantform/handlers"
 	routes "nftPlantform/router"
 
 	"nftPlantform/internal/database"

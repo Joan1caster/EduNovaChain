@@ -80,6 +80,7 @@ func (h *NFTHandler) CreateNFT(c *gin.Context) {
 	nftID, err := h.nftService.CreateNFT(req.TokenID, req.ContractAddress, creatorID, creatorID, req.MetadataURI, req.SummaryFeature, req.ContentFeature, req.Grade, req.Subject, req.Topic)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create NFT"})
+		c.Error(err)
 		return
 	}
 
@@ -119,14 +120,15 @@ func (h *NFTHandler) GetNFTByID(c *gin.Context) {
 	nft, err := h.nftService.GetNFTDetails(req.NFTId)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to select nft details"})
+		c.Error(err)
 		return
 	}
-	c.JSON(http.StatusBadRequest, gin.H{"nft": nft})
+	c.JSON(http.StatusOK, gin.H{"nft": nft})
 }
 
 func (h *NFTHandler) GetNFTsByCreator(c *gin.Context) {
 	var req struct {
-		Creator uint `json:"creator" binding:"required"`
+		Creator uint `json:"creatorID" binding:"required"`
 	}
 
 	if err := c.ShouldBindJSON(&req); err != nil {
