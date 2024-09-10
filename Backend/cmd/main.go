@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"time"
 
 	"github.com/gin-contrib/cors"
 
@@ -9,7 +10,6 @@ import (
 	routes "nftPlantform/router"
 
 	"nftPlantform/internal/database"
-	"nftPlantform/handlers"
 	"nftPlantform/utils"
 )
 
@@ -25,12 +25,15 @@ func main() {
 	database.InitTable()
 	db := database.GetDB()
 	router := routes.SetupRouter(db)
-	config := cors.DefaultConfig()
-	config.AllowAllOrigins = true
-	config.AllowMethods = []string{"GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"}
-	config.AllowHeaders = []string{"Origin", "Content-Length", "Content-Type", "Authorization"}
-	router.Use(cors.New(config))
 	router.Use(handlers.ErrorHandler())
+	router.Use(cors.New(cors.Config{
+		AllowOrigins:     []string{"http://localhost:8000"},        // 允许的前端地址
+		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE"}, // 允许的HTTP方法
+		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization"},
+		ExposeHeaders:    []string{"Content-Length"},
+		AllowCredentials: true,
+		MaxAge:           12 * time.Hour,
+	}))
 	err = router.Run("127.0.0.1:4455")
 	if err != nil {
 		return
