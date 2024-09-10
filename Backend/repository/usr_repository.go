@@ -77,13 +77,12 @@ func (r *GormUserRepository) GetUserByWalletAddress(walletAddress string) (*mode
 	result := r.db.Where("wallet_address = ?", walletAddress).First(&user)
 	if result.Error != nil {
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-			return nil, errors.New("user not found")
+			return nil, gorm.ErrRecordNotFound
 		}
 		return nil, result.Error
 	}
 	return &user, nil
 }
-
 func (r *GormUserRepository) UpdateUser(id uint, updates map[string]interface{}) error {
 	result := r.db.Model(&models.User{}).Where("id = ?", id).Updates(updates)
 	if result.Error != nil {
