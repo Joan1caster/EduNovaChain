@@ -3,7 +3,7 @@ package routes
 import (
 	"nftPlantform/config"
 	"nftPlantform/handlers"
-	"nftPlantform/middleware"
+	_"nftPlantform/middleware"
 	"nftPlantform/repository"
 	"nftPlantform/service"
 
@@ -33,13 +33,14 @@ func SetupRouter(db *gorm.DB) *gin.Engine {
 	{
 		public.GET("/siweMessage", userHandler.GetSIWEMessage)  // 签名
 		public.POST("/login", userHandler.Login)                // 验证签名并登录
-		public.GET("/check-auth/:nftID", userHandler.CheckAuth) // 新增：检查用户认证状态
+		public.GET("/check-auth/:nftID", userHandler.CheckAuth) // 检查用户认证状态
 
 		public.GET("/nfts/id", nftHandler.GetNFTByID)            // 根据NFT id查NFT信息
 		public.GET("/nfts/creator", nftHandler.GetNFTsByCreator) // 根据NFT作者查所有NFT列表
 		// public.GET("/nfts/retrieval", nftHandler.GetNFTBySummary)   // 根据文字内容查相关NFT列表
 		public.GET("/nfts/latest/:number", nftHandler.GetLatestNFT)                // 返回最新的number个NFT
 		public.GET("/nfts/topicAndType", nftHandler.GetNFTByTopicAndType)          // 根据主题和类型查询NFT
+		public.GET("/nfts/feature", nftHandler.GetFeatures)          // 根据输入查询特征值
 		public.GET("/grade", nftHandler.GetGradeList)                              // 查询年级
 		public.GET("/subject/:grade", nftHandler.GetSubjectByGrade)                // 根据年级查学科
 		public.GET("/topic/subjectandgrade", nftHandler.GetTopicBySubjectAndGrade) // 根据年级\学科查主题
@@ -49,7 +50,7 @@ func SetupRouter(db *gorm.DB) *gin.Engine {
 
 	// 需要认证的路由
 	authenticated := router.Group("/api/v1")
-	authenticated.Use(middleware.AuthMiddleware())
+	// authenticated.Use(middleware.AuthMiddleware())
 	{
 		//user's router
 		authenticated.GET("/user/favorite", userHandler.GetFavoriteTopic) // Query users’ favorite topics

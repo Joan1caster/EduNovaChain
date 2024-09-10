@@ -37,6 +37,7 @@ func (h *NFTHandler) GetFeatures(c *gin.Context) {
 
 	summaryFeature, err := utils.GetFeatures([]string{req.Summary})
 	if err != nil {
+		log
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create NFT, get feature failed"})
 		return
 	}
@@ -56,7 +57,7 @@ func (h *NFTHandler) GetFeatures(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "similarityHigh"})
 		return
 	}
-	c.JSON(http.StatusBadRequest, gin.H{"summaryFeature": summaryFeature, "contentFeature": contentFeature})
+	c.JSON(http.StatusOK, gin.H{"summaryFeature": summaryFeature, "contentFeature": contentFeature})
 }
 
 // CreateNFT handles the creation of a new NFT
