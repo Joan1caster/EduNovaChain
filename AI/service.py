@@ -41,11 +41,14 @@ def get_features():
             "message": "input string must not empty, please check index:%d"%index
         }), 400        
     embeddings = get_embeddings(words)
-    if len(words) == 1:
-        embeddings = [float(val) for val in embeddings.flatten()]
+    if len(words) != 1:
+        return jsonify({
+            "error": "Bad Request",
+            "message": "input string must be ones, please check"
+        }), 400  
     else:
-        embeddings = [[float(val) for val in embedding.flatten()] for embedding in embeddings]
-    return jsonify({"embeddings": embeddings})
+        embeddings = [float(val) for val in embeddings.flatten()]
+    return embeddings
 
 @app.route('/get_summary', methods=['POST'])
 def get_summary():

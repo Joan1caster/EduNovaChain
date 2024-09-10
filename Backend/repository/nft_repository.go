@@ -313,7 +313,7 @@ func (r *GormNFTRepository) GetSubjectByGrade(gradeId uint) (*[]models.Subject, 
 	return subjects, err
 }
 
-func (r *GormNFTRepository) GetNFTByFeature(feature *[512]float32, similarityThreshold float32) ([]*models.NFTWithSimilarity, error) {
+func (r *GormNFTRepository) GetNFTByFeature(feature *[]float32, similarityThreshold float32) ([]*models.NFTWithSimilarity, error) {
 	var result []*models.NFTWithSimilarity
 	var offset int
 	var lastID uint = 0
@@ -356,8 +356,8 @@ func (r *GormNFTRepository) GetNFTByFeature(feature *[512]float32, similarityThr
 	return result, nil
 }
 
-func (r *GormNFTRepository) GetSummaryFeatures(batchSize int) ([][512]float32, error) {
-	var allSummaryFeatures [][512]float32
+func (r *GormNFTRepository) GetSummaryFeatures(batchSize int) ([][]float32, error) {
+	var allSummaryFeatures [][]float32
 	var lastID uint = 0
 	for {
 		var batch []models.NFT
@@ -433,11 +433,20 @@ func (r *GormNFTRepository) IncrementNFTCount(nftID uint, countType string) erro
 	return nil
 }
 
-func (r *GormNFTRepository) GetContentFeatures(batchSize int) ([][512]float32, error) {
-	var allMetadatatFeatures [][512]float32
+func (r *GormNFTRepository) GetContentFeatures(batchSize int) ([][]float32, error) {
+	var allMetadatatFeatures [][]float32
 	var lastID uint = 0
 	for {
 		var batch []models.NFT
+
+		var count int64
+		if err := r.db.Model(&models.NFT{}).Count(&count).Error; err != nil {
+			return nil, err
+		}
+		if count == 0 {
+			return nil, nil // 表长度为0，跳过处理
+		}
+		
 		if err := r.db.Select("id, ContantFeature").
 			Where("id > ?", lastID).
 			Order("id").

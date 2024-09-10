@@ -75,7 +75,7 @@ func (s *NFTService) GetNFTByDetails(query dto.NFTQuery) ([]*models.NFT, error) 
 				return nil, err
 			}
 			// 计算相似度（这里使用余弦相似度作为示例）
-			similarity := utils.CalculateSimilarity(&targetFeature[0], &summaryFeature)
+			similarity := utils.CalculateSimilarity(targetFeature, &summaryFeature)
 
 			nftsWithSimilarity[i] = &models.NFTWithSimilarity{
 				NFT:        nft,
@@ -199,7 +199,7 @@ func (s *NFTService) UpdateNFTCategory(interval int) error {
 }
 
 // 计算NFT的相似度，超过阈值的返回true，否则返回false
-func (s *NFTService) CheckSimilarity(feature [512]float32, threshold float32, batchsize int) (bool, error) {
+func (s *NFTService) CheckSimilarity(feature *[]float32, threshold float32, batchsize int) (bool, error) {
 	allFeatures, err := s.nftRepo.GetContentFeatures(batchsize)
 	if err != nil {
 		return false, err
@@ -213,7 +213,7 @@ func (s *NFTService) CheckSimilarity(feature [512]float32, threshold float32, ba
 	if len(allFeatures) < numCPU*4 {
 		// 对于小数据集，使用单线程处理
 		for _, vec := range allFeatures {
-			if utils.CalculateSimilarity(&vec, &feature) > threshold {
+			if utils.CalculateSimilarity(&vec, feature) > threshold {
 				return true, nil
 			}
 		}
@@ -235,7 +235,7 @@ func (s *NFTService) CheckSimilarity(feature [512]float32, threshold float32, ba
 		go func(start, end int) {
 			defer wg.Done()
 			for _, vec := range allFeatures[start:end] {
-				if utils.CalculateSimilarity(&vec, &feature) > threshold {
+				if utils.CalculateSimilarity(&vec, feature) > threshold {
 					select {
 					case resultChan <- true:
 					default:

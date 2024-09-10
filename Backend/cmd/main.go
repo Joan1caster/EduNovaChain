@@ -9,6 +9,7 @@ import (
 	routes "nftPlantform/router"
 
 	"nftPlantform/internal/database"
+	"nftPlantform/handlers"
 	"nftPlantform/utils"
 )
 
@@ -29,6 +30,7 @@ func main() {
 	config.AllowMethods = []string{"GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"}
 	config.AllowHeaders = []string{"Origin", "Content-Length", "Content-Type", "Authorization"}
 	router.Use(cors.New(config))
+	router.Use(handlers.ErrorHandler())
 	err = router.Run("127.0.0.1:4455")
 	if err != nil {
 		return

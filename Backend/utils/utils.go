@@ -71,8 +71,8 @@ func Float32ArrayToBlob(arr [512]float32) ([]byte, error) {
 }
 
 // BlobToFloat32Array converts []byte to [512]float32
-func BlobToFloat32Array(b []byte) ([512]float32, error) {
-    var arr [512]float32
+func BlobToFloat32Array(b []byte) ([]float32, error) {
+    arr := make([]float32, 512)
     buf := bytes.NewReader(b)
     for i := 0; i < 512; i++ {
         var v float32

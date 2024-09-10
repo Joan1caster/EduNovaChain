@@ -77,7 +77,12 @@ func (r *GormUserRepository) GetUserByWalletAddress(walletAddress string) (*mode
 	result := r.db.Where("wallet_address = ?", walletAddress).First(&user)
 	if result.Error != nil {
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-			return nil, errors.New("user not found")
+			// 用户不存在，创建新用户
+			user = models.User{WalletAddress: walletAddress} // 其他字段可以根据需要设置
+			if err := r.db.Create(&user).Error; err != nil {
+				return nil, err
+			}
+			return &user, nil
 		}
 		return nil, result.Error
 	}

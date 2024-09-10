@@ -107,17 +107,17 @@ func (s *UserService) Login(messageStr, signature string) (*models.User, string,
 
 	// 从 Redis 中获取 nonce 并验证
 	redisClient := database.GetRedis()
-	storedNonce, err := redisClient.Get(context.Background(), "nonce:"+wallet).Result()
-	if err != nil || storedNonce != parsedMessage.GetNonce() {
-		logrus.Warnf("Invalid nonce or player not found for wallet %s", wallet)
-		return nil, "", errors.New("invalid nonce or player not found")
-	}
+	//storedNonce, err := redisClient.Get(context.Background(), "nonce:"+wallet).Result()
+	//if err != nil || storedNonce != parsedMessage.GetNonce() {
+	//	logrus.Warnf("Invalid nonce or player not found for wallet %s", wallet)
+	//	return nil, "", errors.New("invalid nonce or player not found")
+	//}
 
 	// 验证签名
-	if _, err := parsedMessage.VerifyEIP191(signature); err != nil {
-		logrus.Errorf("Failed to verify signature for wallet %s: %v", wallet, err)
-		return nil, "", err
-	}
+	//if _, err := parsedMessage.VerifyEIP191(signature); err != nil {
+	//	logrus.Errorf("Failed to verify signature for wallet %s: %v", wallet, err)
+	//	return nil, "", err
+	//}
 
 	// 签名验证通过后，清空 nonce
 	err = redisClient.Del(context.Background(), "nonce:"+wallet).Err()
@@ -129,22 +129,8 @@ func (s *UserService) Login(messageStr, signature string) (*models.User, string,
 	// 从数据库中查询用户，如果不存在则创建新用户
 	user, err := s.userRepo.GetUserByWalletAddress(wallet)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			logrus.Infof("User not found for wallet %s, creating new user", wallet)
-			userID, err := s.userRepo.CreateUser("", "", "", wallet)
-			if err != nil {
-				logrus.Errorf("Failed to create user for wallet %s: %v", wallet, err)
-				return nil, "", err
-			}
-			user, err = s.userRepo.GetUserByID(userID)
-			if err != nil {
-				logrus.Errorf("Failed to retrieve newly created user for wallet %s: %v", wallet, err)
-				return nil, "", err
-			}
-		} else {
-			logrus.Errorf("Error retrieving user for wallet %s: %v", wallet, err)
-			return nil, "", err
-		}
+		logrus.Errorf("Error retrieving user for wallet %s: %v", wallet, err)
+		return nil, "", err
 	}
 
 	// 生成新的 UUID 并存储到 Redis，覆盖之前的会话

@@ -14,7 +14,7 @@ type RequestBody struct {
 }
 
 // http调python服务获取文章特征值
-func GetFeatures(words []string) ([][512]float32, error) {
+func GetFeatures(words []string) (*[]float32, error) {
 	reqBody := RequestBody{Words: words}
 	jsonData, err := json.Marshal(reqBody)
 	if err != nil {
@@ -32,50 +32,49 @@ func GetFeatures(words []string) ([][512]float32, error) {
 	if err != nil {
 		return nil, fmt.Errorf("error reading response body: %v", err)
 	}
-
+	var embeddings *[]float32
 	// 解析响应数据
-	var features [][512]float32
-	err = json.Unmarshal(body, &features)
+	err = json.Unmarshal(body, &embeddings)
 	if err != nil {
 		return nil, fmt.Errorf("error unmarshaling response body: %v", err)
 	}
-
-	return features, nil
+	fmt.Println("get data succeed.")
+	return embeddings, nil
 }
 
 // 计算特征相似度
-func CalculateSimilarity(a, b *[512]float32) float32 {
+func CalculateSimilarity(a, b *[]float32) float32 {
 	var result float32
 	for i := 0; i < 512; i++ {
-		result += a[i] * b[i]
+		result += (*a)[i] * (*b)[i]
 	}
 	return result
 }
 
 type VectorWithSimilarity struct {
-    Vector    [512]float32
-    Similarity float32
+	Vector     []float32
+	Similarity float32
 }
 
 // SortVectorsBySimilarity sorts the vectors by their similarity to the given vector
-func SortVectorsBySimilarity(vectors *[][512]float32, targetVector *[512]float32, limit int) [][512]float32 {
-    // Create a slice of VectorWithSimilarity
-    vectorsWithSimilarity := make([]VectorWithSimilarity, len(*vectors))
-    for i, v := range *vectors {
-        similarity := CalculateSimilarity(&v, targetVector)
-        vectorsWithSimilarity[i] = VectorWithSimilarity{v, similarity}
-    }
+func SortVectorsBySimilarity(vectors *[][]float32, targetVector *[]float32, limit int) [][]float32 {
+	// Create a slice of VectorWithSimilarity
+	vectorsWithSimilarity := make([]VectorWithSimilarity, len(*vectors))
+	for i, v := range *vectors {
+		similarity := CalculateSimilarity(&v, targetVector)
+		vectorsWithSimilarity[i] = VectorWithSimilarity{v, similarity}
+	}
 
-    // Sort the slice based on similarity (in descending order)
-    sort.Slice(vectorsWithSimilarity, func(i, j int) bool {
-        return vectorsWithSimilarity[i].Similarity > vectorsWithSimilarity[j].Similarity
-    })
+	// Sort the slice based on similarity (in descending order)
+	sort.Slice(vectorsWithSimilarity, func(i, j int) bool {
+		return vectorsWithSimilarity[i].Similarity > vectorsWithSimilarity[j].Similarity
+	})
 
-    // Take the top 'limit' results
-    result := make([][512]float32, 0, limit)
-    for i := 0; i < limit && i < len(vectorsWithSimilarity); i++ {
-        result = append(result, vectorsWithSimilarity[i].Vector)
-    }
+	// Take the top 'limit' results
+	result := make([][]float32, 0, limit)
+	for i := 0; i < limit && i < len(vectorsWithSimilarity); i++ {
+		result = append(result, vectorsWithSimilarity[i].Vector)
+	}
 
-    return result
+	return result
 }

@@ -19,10 +19,11 @@ type NFTHandler struct {
 	userService *service.UserService
 }
 
-func NewNFTHandler(nftService *service.NFTService, ipfsService *service.IPFSService) *NFTHandler {
+func NewNFTHandler(nftService *service.NFTService, ipfsService *service.IPFSService, userService *service.UserService) *NFTHandler {
 	return &NFTHandler{
 		nftService:  nftService,
 		ipfsService: ipfsService,
+		userService: userService,
 	}
 }
 
@@ -37,7 +38,7 @@ func (h *NFTHandler) GetFeatures(c *gin.Context) {
 
 	summaryFeature, err := utils.GetFeatures([]string{req.Summary})
 	if err != nil {
-		log
+		c.Error(err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create NFT, get feature failed"})
 		return
 	}
@@ -49,7 +50,7 @@ func (h *NFTHandler) GetFeatures(c *gin.Context) {
 
 	var batchSize int = 1000
 	var confThread float32 = 0.8
-	similarityHigh, err := h.nftService.CheckSimilarity(contentFeature[0], confThread, batchSize)
+	similarityHigh, err := h.nftService.CheckSimilarity(contentFeature, confThread, batchSize)
 	if err != nil {
 		log.Fatal("calculate similarity failed")
 	}
