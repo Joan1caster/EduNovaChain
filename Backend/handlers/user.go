@@ -15,8 +15,8 @@ type UserHandler struct {
 	nftService  *service.NFTService
 }
 
-func NewUserHandler(userService *service.UserService) *UserHandler {
-	return &UserHandler{userService: userService}
+func NewUserHandler(userService *service.UserService, nftService *service.NFTService) *UserHandler {
+	return &UserHandler{userService: userService, nftService: nftService}
 }
 
 func (h *UserHandler) GetFavoriteTopic(c *gin.Context) {
@@ -66,7 +66,7 @@ func (u *UserHandler) CheckAuth(c *gin.Context) {
 	}
 
 	if nft.Owner.WalletAddress != wallet {
-		utils.Error(c, http.StatusUnauthorized, "无权限访问此 NFT")
+		utils.Success(c, gin.H{"authority": false})
 		return
 	}
 

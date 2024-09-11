@@ -7,8 +7,8 @@ type IDName struct {
 
 type NFTQuery struct {
 	Keyword  *string `json:"keyword"`
-	GradeID  *uint   `json:"gradeId"`
-	Subjects *[]uint `json:"gradeIds"`
+	GradeIDs *[]uint `json:"gradeIds"`
+	Subjects *[]uint `json:"subjectIds"`
 	TopicIds *[]uint `json:"topicIds"`
 	Page     *uint   `json:"page"`
 	PageSize *uint   `json:"pagesize"`
@@ -23,4 +23,9 @@ type CreateNFT struct {
 	Grade           string       `json:"grade" binging:"required"`
 	Subject         string       `json:"subject" binging:"required"`
 	Topic           string       `json:"topic" binging:"required"`
+}
+
+type OrderMessage struct {
+	NFTId uint `json:"nftId" binding:"required"`
+	Price float64 `json:"price" binding:"required"`
 }

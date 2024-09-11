@@ -79,7 +79,7 @@ func (h *NFTHandler) CreateNFT(c *gin.Context) {
 
 	nftID, err := h.nftService.CreateNFT(req.TokenID, req.ContractAddress, creatorID, creatorID, req.MetadataURI, req.SummaryFeature, req.ContentFeature, req.Grade, req.Subject, req.Topic)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create NFT"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create NFT, tokenID exist"})
 		c.Error(err)
 		return
 	}
@@ -190,6 +190,7 @@ func (h *NFTHandler) GetLatestNFT(c *gin.Context) {
 	nfts, err := h.nftService.GetLatestNFT(uint(number))
 	if err != nil || len(*nfts) == 0 {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve NFTs"})
+		c.Error(err)
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{
@@ -212,6 +213,7 @@ func (h *NFTHandler) GetNFTByTopicAndType(c *gin.Context) {
 	nfts, err := h.nftService.GetNFTByTopicAndType(req.TopicId, req.TypeId, limit)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"message": "Get NFT By Topic And Type from database error"})
+		c.Error(err)
 	}
 	if len(*nfts) == 0 {
 		c.JSON(http.StatusOK, gin.H{"message": "No NFTs found for this classification", "data": []models.NFT{}})
@@ -258,7 +260,7 @@ func (h *NFTHandler) GetSubjectByGrade(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"message": "NFTs retrieved successfully",
+		"message": "Subject retrieved successfully",
 		"data":    subjects,
 		"count":   len(*subjects),
 	})
@@ -305,7 +307,7 @@ func (h *NFTHandler) GetTopicBySubjectAndGrade(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"message": "NFTs retrieved successfully",
+		"message": "topic retrieved successfully",
 		"data":    topics,
 		"count":   len(topics),
 	})

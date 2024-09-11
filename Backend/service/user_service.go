@@ -107,6 +107,7 @@ func (s *UserService) Login(messageStr, signature string) (*models.User, string,
 
 	// 从 Redis 中获取 nonce 并验证
 	redisClient := database.GetRedis()
+	// 这里我本地调试有问题，暂时屏蔽
 	//storedNonce, err := redisClient.Get(context.Background(), "nonce:"+wallet).Result()
 	//if err != nil || storedNonce != parsedMessage.GetNonce() {
 	//	logrus.Warnf("Invalid nonce or player not found for wallet %s", wallet)
@@ -144,6 +145,7 @@ func (s *UserService) Login(messageStr, signature string) (*models.User, string,
 	// 生成 JWT
 	expirationTime := time.Now().Add(12 * time.Hour)
 	claims := &models.Claims{
+		UserID: user.ID,
 		Wallet: wallet,
 		UUID:   newUUID,
 		RegisteredClaims: jwt.RegisteredClaims{
@@ -155,7 +157,6 @@ func (s *UserService) Login(messageStr, signature string) (*models.User, string,
 		logrus.Errorf("Failed to generate JWT for wallet %s: %v", wallet, err)
 		return nil, "", err
 	}
-
 	logrus.Infof("User %s logged in successfully", wallet)
 	return user, tokenString, nil
 }

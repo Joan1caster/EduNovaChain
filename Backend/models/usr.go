@@ -8,9 +8,9 @@ import (
 
 type User struct {
 	ID            uint    `gorm:"primaryKey"`
-	Username      string  `gorm:"unique;not null"`
-	Email         string  `gorm:"unique;not null"`
-	PasswordHash  string  `gorm:"not null"`
+	Username      string  `gorm:"type:varchar(30);"`
+	Email         string  `gorm:"type:varchar(30);"`
+	PasswordHash  string  `gorm:"type:varchar(18);"`
 	WalletAddress string  `gorm:"unique;not null"`
 	Topics        []Topic `gorm:"many2many:user_topics;"`
 	OwnedNFTs     []NFT   `gorm:"foreignKey:OwnerID"`
@@ -22,6 +22,7 @@ type User struct {
 }
 
 type Claims struct {
+	UserID uint   `json:"userid"`
 	Wallet string `json:"wallet"`
 	UUID   string `json:"uuid"`
 	jwt.RegisteredClaims

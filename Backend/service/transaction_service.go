@@ -2,13 +2,11 @@ package service
 
 import (
 	"context"
-	"errors"
+	"fmt"
 	"log"
 	"strconv"
 	"sync"
 	"time"
-
-	"github.com/lysu/go-saga"
 
 	"nftPlantform/api"
 )
@@ -45,78 +43,46 @@ func NewNFTTrade(
 }
 
 func (s *NFTTrade) ExecuteTrade(ctx context.Context, orderID uint, buyerID uint, txHash string) error {
-
-	sagaInstance := saga.NewSEC()
-
-	sagaInstance.AddSubTxDef(
-		"tradition step 1: verify order status",
-		func(ctx context.Context) error {
-			order, err := s.orderRepo.GetOrderByID(buyerID)
-			if err != nil {
-				return err
-			}
-			return s.orderService.ValidateOrderStatus(orderID, order.Buyer.WalletAddress)
-		},
-		nil, // 无需补偿操作
-	)
-
-	sagaInstance.AddSubTxDef(
-		"tradition step 2: lesson to blockchain, update database",
-		func(ctx context.Context) error {
-			order, err := s.orderRepo.GetOrderByID(orderID)
-			if err != nil {
-				return err
-			}
-
-			_, err = s.transactionRepo.CreateTransaction(orderID, txHash, strconv.FormatFloat(order.Price, 'f', -1, 64), "0", "PENDING")
-			if err != nil {
-				return err
-			}
-			s.startTransactionListener(order.NFTID, orderID, buyerID, txHash)
-			return err
-		},
-		func(ctx context.Context) error {
-			// 补偿操作：将交易标记为失败
-			return s.transactionRepo.UpdateTransactionStatus(orderID, "FAILED")
-		},
-	)
-
-	sagaInstance.AddSubTxDef(
-		"tradition step 3: transfer nft in database",
-		func(ctx context.Context) error {
-			order, err := s.orderRepo.GetOrderByID(orderID)
-			if err != nil {
-				return err
-			}
-			buyer, err := s.userRepo.GetUserByID(buyerID)
-			if err != nil {
-				return err
-			}
-			return s.nftService.TransferNFT(order.NFTID, orderID, buyer.ID)
-		},
-		nil,
-	)
-
-	sagaInstance.AddSubTxDef(
-		"tradition step 4: mark order as complete",
-		func(ctx context.Context) error {
-			return s.orderRepo.CompleteOrder(orderID, buyerID)
-		},
-		func(ctx context.Context) error {
-			// 补偿操作：重新打开订单
-			return s.orderRepo.ReopenOrder(orderID)
-		},
-	)
-
-	// 执行Saga
-	err := sagaInstance.StartSaga(ctx, 0)
+	// Step 1: 验证订单状态
+	order, err := s.orderService.GetOrderByID(orderID)
 	if err != nil {
-		// Saga执行失败，触发补偿操作
-		compensateErr := sagaInstance.StartCoordinator()
-		if compensateErr != nil {
-			return errors.New("交易失败，补偿操作也失败: " + compensateErr.Error())
+		return fmt.Errorf("获取订单失败: %w", err)
+	}
+	if err := s.orderService.ValidateOrderStatus(orderID, order.SellerID); err != nil {
+		return fmt.Errorf("验证订单状态失败: %w", err)
+	}
+
+	// Step 2: 创建交易记录并启动交易监听
+	_, err = s.transactionRepo.CreateTransaction(orderID, txHash, strconv.FormatFloat(order.Price, 'f', -1, 64), "0", "PENDING")
+	if err != nil {
+		return fmt.Errorf("创建交易记录失败: %w", err)
+	}
+	go s.startTransactionListener(order.NFTID, orderID, buyerID, txHash)
+
+	// Step 3: 在数据库中转移NFT
+	buyer, err := s.userRepo.GetUserByID(buyerID)
+	if err != nil {
+		// 如果获取买家信息失败，将交易标记为失败
+		if updateErr := s.transactionRepo.UpdateTransactionStatus(orderID, "FAILED"); updateErr != nil {
+			return fmt.Errorf("获取买家信息失败且更新交易状态失败: %v, %w", updateErr, err)
 		}
-		return errors.New("transaction failed")
+		return fmt.Errorf("获取买家信息失败: %w", err)
+	}
+	if err := s.nftService.TransferNFT(order.NFTID, orderID, buyer.ID); err != nil {
+		// 如果NFT转移失败，将交易标记为失败
+		if updateErr := s.transactionRepo.UpdateTransactionStatus(orderID, "FAILED"); updateErr != nil {
+			return fmt.Errorf("NFT转移失败且更新交易状态失败: %v, %w", updateErr, err)
+		}
+		return fmt.Errorf("NFT转移失败: %w", err)
+	}
+
+	// Step 4: 标记订单为完成
+	if err := s.orderRepo.CompleteOrder(orderID, buyerID); err != nil {
+		// 如果标记订单完成失败，尝试重新打开订单
+		if reopenErr := s.orderRepo.ReopenOrder(orderID); reopenErr != nil {
+			return fmt.Errorf("标记订单完成失败且重新打开订单失败: %v, %w", reopenErr, err)
+		}
+		return fmt.Errorf("标记订单完成失败: %w", err)
 	}
 
 	return nil

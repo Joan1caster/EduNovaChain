@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"nftPlantform/models"
+	"nftPlantform/models/dto"
 	"nftPlantform/service"
 	"nftPlantform/utils"
 
@@ -13,7 +14,7 @@ import (
 type OrderHandler struct {
 	OrderService *service.OrderService
 	nftService   *service.NFTService
-	tradeService   *service.NFTTrade
+	tradeService *service.NFTTrade
 }
 
 func NewOrderHandler(OrderService *service.OrderService, nftService *service.NFTService, tradeService *service.NFTTrade) *OrderHandler {
@@ -34,8 +35,8 @@ func NewOrderHandler(OrderService *service.OrderService, nftService *service.NFT
 // @Failure 400 {object} map[string]string
 // @Failure 500 {object} map[string]string
 // @Router /nft/list [post]
-func(h *OrderHandler) LatestNFT(c *gin.Context) {
-	
+func (h *OrderHandler) LatestNFT(c *gin.Context) {
+
 }
 
 // ListNFT godoc
@@ -51,32 +52,34 @@ func(h *OrderHandler) LatestNFT(c *gin.Context) {
 // @Failure 500 {object} map[string]string
 // @Router /nft/list [post]
 func (h *OrderHandler) ListNFT(c *gin.Context) {
-	type orderMessage struct {
-		nftId uint
-		price float64
-	}
+
 	wallet, exists := c.Get("wallet")
 	if !exists {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
 		return
 	}
-	var newOrderReq orderMessage
+	var newOrderReq dto.OrderMessage
 	if err := c.BindJSON(&newOrderReq); err != nil {
 		utils.Error(c, http.StatusBadRequest, "Invalid request payload")
 		return
 	}
 
 	// 验证NFT所有权
-	nft, err := h.nftService.GetNFTDetails(newOrderReq.nftId)
+	nft, err := h.nftService.GetNFTDetails(newOrderReq.NFTId)
+
+	if nft == nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "trade NFT do not exist"})
+		return
+	}
 
 	if err != nil || nft.Owner.WalletAddress != wallet.(string) {
 		c.JSON(http.StatusForbidden, gin.H{"error": "You don't own this NFT"})
 		return
 	}
 
-	orderID, err := h.OrderService.ListNFTForSale(nft.Owner.ID, newOrderReq.nftId, newOrderReq.price)
+	orderID, err := h.OrderService.ListNFTForSale(nft.Owner.ID, newOrderReq.NFTId, newOrderReq.Price)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create order"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -96,7 +99,7 @@ func (h *OrderHandler) ListNFT(c *gin.Context) {
 // @Failure 500 {object} map[string]string
 // @Router /nft/delist [post]
 func (h *OrderHandler) DelistNFT(c *gin.Context) {
-	wallet, exists := c.Get("wallet")
+	UserID, exists := c.Get("userID")
 	if !exists {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
 		return
@@ -110,15 +113,15 @@ func (h *OrderHandler) DelistNFT(c *gin.Context) {
 		return
 	}
 
-	err := h.OrderService.ValidateOrderStatus(req.OrderID, wallet.(string))
+	err := h.OrderService.ValidateOrderStatus(req.OrderID, UserID.(uint))
 
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to validate order"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 	err = h.OrderService.CancelOrder(req.OrderID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to cancel order"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -136,70 +139,69 @@ func (h *OrderHandler) GetHistoryByNFTId(c *gin.Context) {
 
 	orders, err := h.OrderService.GetCompletedOrdersByNFTID(req.nftId)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error":"Failed to select history orders"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to select history orders"})
 	}
 
 	if len(orders) == 0 {
-			c.JSON(http.StatusOK, gin.H{"message": "No NFTs found for this creator", "data": []models.Order{}})
-			return
-		}
+		c.JSON(http.StatusOK, gin.H{"message": "No NFTs found for this creator", "data": []models.Order{}})
+		return
+	}
 
 	c.JSON(http.StatusOK, gin.H{
 		"orders": "orders retrieved successfully",
-		"data":    orders,
-		"count":   len(orders),
+		"data":   orders,
+		"count":  len(orders),
 	})
 }
 
-// func (h *OrderHandler) BuyNFT(c *gin.Context) {
-// 	wallet, exists := c.Get("wallet")
-// 	if !exists {
-// 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
-// 		return
-// 	}
+func (h *OrderHandler) BuyNFT(c *gin.Context) {
+	wallet, exists := c.Get("wallet")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
 
-// 	var req BuyNFTRequest
-// 	if err := c.BindJSON(&req); err != nil {
-// 		utils.Error(c, http.StatusBadRequest, "Invalid request payload")
-// 		return
-// 	}
+	userID, exists := c.Get("userID")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
 
-// 	// 验证订单状态
-// 	order, err := h.orderRepo.GetOrderByID(req.OrderID)
-// 	if err != nil {
-// 		c.JSON(http.StatusNotFound, gin.H{"error": "Order not found"})
-// 		return
-// 	}
+	var req BuyNFTRequest
+	if err := c.BindJSON(&req); err != nil {
+		utils.Error(c, http.StatusBadRequest, "Invalid request payload")
+		return
+	}
 
-// 	if order.Status != "OPEN" {
-// 		c.JSON(http.StatusBadRequest, gin.H{"error": "Order is not open for purchase"})
-// 		return
-// 	}
+	// 验证订单状态
+	order, err := h.OrderService.GetOrderByID(req.OrderID)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Order not found"})
+		return
+	}
 
-// 	// 验证买家不是卖家
-// 	if order.Seller.WalletAddress == wallet.(string) {
-// 		c.JSON(http.StatusBadRequest, gin.H{"error": "You cannot buy your own NFT"})
-// 		return
-// 	}
+	if order.Status != "OPEN" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Order is not open for purchase"})
+		return
+	}
 
-// 	// 获取买家ID
-// 	buyer, err := h.userRepo.GetUserByWallet(wallet.(string))
-// 	if err != nil {
-// 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get buyer information"})
-// 		return
-// 	}
+	// 验证买家不是卖家
+	if order.Seller.WalletAddress == wallet.(string) {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "You cannot buy your own NFT"})
+		return
+	}
 
-// 	// 启动交易流程
-// 	err = h.nftTradeService.ExecuteTrade(c.Request.Context(), req.OrderID, buyer.ID, req.TxHash)
-// 	if err != nil {
-// 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to initiate purchase: " + err.Error()})
-// 		return
-// 	}
+	// 启动交易流程
+	err = h.tradeService.ExecuteTrade(c.Request.Context(), req.OrderID, userID.(uint), req.TxHash)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to initiate purchase: " + err.Error()})
+		return
+	}
 
-// 	c.JSON(http.StatusOK, gin.H{"message": "NFT purchase initiated successfully", "order_id": req.OrderID})
-// }
+	c.JSON(http.StatusOK, gin.H{"message": "NFT purchase initiated successfully", "order_id": req.OrderID})
+}
 
-// type BuyNFTRequest struct {
-// 	OrderID uint   `json:"order_id" binding:"required"`
-// 	TxHash  string `json:"tx_hash" binding:"required"`
-// }
+type BuyNFTRequest struct {
+	OrderID uint   `json:"order_id" binding:"required"`
+	TxHash  string `json:"tx_hash" binding:"required"`
+}

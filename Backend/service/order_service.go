@@ -34,10 +34,27 @@ func (s *OrderService) ListNFTForSale(sellerID, nftID uint, price float64) (uint
 		return 0, errors.New("you are not owner")
 	}
 
+	order, err := s.orderRepo.GetOpenOrdersBySellerIDAndNFTID(sellerID, nftID)
+	if err != nil {
+		return 0, err
+	}
+	if order != nil && order.Status == "OPEN"{
+		if order.Price != price {
+			order.Price = price
+			err := s.orderRepo.UpdateOrder(order)
+			if err != nil {
+				return 0, err
+			}
+			return order.ID, nil
+		} else {
+			return 0, errors.New("order has been submit, please do not repeat")
+		}
+	}
+
 	return s.orderRepo.CreateOrder(sellerID, nftID, price)
 }
 
-func (s *OrderService) ValidateOrderStatus(orderID uint, sellerWallet string) error {
+func (s *OrderService) ValidateOrderStatus(orderID uint, userID uint) error {
 	order, err := s.orderRepo.GetOrderByID(orderID)
 	if err != nil {
 		return errors.New("error fetching order")
@@ -45,7 +62,7 @@ func (s *OrderService) ValidateOrderStatus(orderID uint, sellerWallet string) er
 	if order == nil {
 		return errors.New("order not found")
 	}
-	if order.Seller.WalletAddress != sellerWallet {
+	if order.SellerID != userID {
 		return errors.New("order not build by you")
 	}
 	if order.Status == "OPEN" {

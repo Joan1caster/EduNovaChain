@@ -40,18 +40,20 @@ func (s *NFTService) CreateNFT(tokenID, contractAddress string, ownerID, creator
 	if err != nil {
 		return 0, err
 	}
-
 	return s.nftRepo.CreateNFT(tokenID, contractAddress, ownerID, creatorID, metadataURI, summaryFeature, metadataFeature, grade_, subject_, topic_)
 }
 
 // GetNFTDetails 获取NFT详情
 func (s *NFTService) GetNFTDetails(id uint) (*models.NFT, error) {
-	s.nftRepo.IncrementNFTCount(id, "view")
+	err := s.nftRepo.IncrementNFTCount(id, "view")
+	if err != nil {
+		return nil, err
+	}
 	return s.nftRepo.GetNFTByID(id)
 }
 
 // 点赞
-func (s *NFTService) LikeNFTByID(userID, nftID uint) (error) {
+func (s *NFTService) LikeNFTByID(userID, nftID uint) error {
 	return s.nftRepo.LikeNFTByID(userID, nftID)
 }
 
@@ -68,7 +70,7 @@ func (s *NFTService) GetNFTByDetails(query dto.NFTQuery) ([]*models.NFT, error) 
 		if err != nil {
 			return nil, err
 		}
-		for i, nft := range nfts {
+		for _, nft := range nfts {
 			// 将 []byte 转换为 []float32
 			summaryFeature, err := utils.BlobToFloat32Array(nft.SummaryFeature)
 			if err != nil {
@@ -77,10 +79,10 @@ func (s *NFTService) GetNFTByDetails(query dto.NFTQuery) ([]*models.NFT, error) 
 			// 计算相似度（这里使用余弦相似度作为示例）
 			similarity := utils.CalculateSimilarity(targetFeature, &summaryFeature)
 
-			nftsWithSimilarity[i] = &models.NFTWithSimilarity{
+			nftsWithSimilarity = append(nftsWithSimilarity, &models.NFTWithSimilarity{
 				NFT:        nft,
 				Similarity: similarity,
-			}
+			})
 		}
 
 		// 根据相似度排序
@@ -90,6 +92,8 @@ func (s *NFTService) GetNFTByDetails(query dto.NFTQuery) ([]*models.NFT, error) 
 		for _, value := range nftsWithSimilarity {
 			res = append(res, value.NFT)
 		}
+	} else {
+		res = nfts
 	}
 	// 实现分页逻辑
 	totalNFTs := len(res)

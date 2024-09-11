@@ -64,6 +64,15 @@ func (r *GormOrderRepository) GetOpenOrdersByNFTID(nftID uint) ([]*models.Order,
 	return orders, nil
 }
 
+func (r *GormOrderRepository) GetOpenOrdersBySellerIDAndNFTID(sellerID, nftID uint) (*models.Order, error) {
+	var order models.Order
+	result := r.db.Where("seller_id = ? AND nft_id = ? AND status = ?",sellerID,  nftID, "OPEN").Find(&order)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	return &order, nil
+}
+
 func (r *GormOrderRepository) GetCompletedOrdersByNFTID(nftID uint) ([]*models.Order, error) {
 	var orders []*models.Order
 	result := r.db.Where("nft_id = ? AND status = ?", nftID, "COMPLETED").Find(&orders)

@@ -41,17 +41,24 @@ func (r *GormNFTRepository) CreateNFT(tokenID, contractAddress string, ownerID, 
 		Grades:          []models.Grade{*grade},
 		Subjects:        []models.Subject{*subject},
 		Topics:          []models.Topic{*topic},
+		Categories:      []models.NFTCategory{models.CategoryNewest},
 	}
 	result := r.db.Create(&nft)
 	if result.Error != nil {
 		return 0, result.Error
 	}
+	r.db.Save(nft)
 	return nft.ID, nil
 }
 
 func (r *GormNFTRepository) GetNFTByID(id uint) (*models.NFT, error) {
 	var nft models.NFT
-	result := r.db.First(&nft, id)
+	result := r.db.
+		Preload("Grades").
+		Preload("Subjects").
+		Preload("Topics").
+		Preload("Owner").
+		Preload("Creator").First(&nft, id)
 	if result.Error != nil {
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 			return nil, errors.New("NFT not found")
@@ -64,10 +71,20 @@ func (r *GormNFTRepository) GetNFTByID(id uint) (*models.NFT, error) {
 
 func (r *GormNFTRepository) GetLatestNFT(number uint) (*[]models.NFT, error) {
 	var nfts []models.NFT
-	result := r.db.Order("created_at DESC").Limit(3).Find(&nfts)
+
+	result := r.db.Order("created_at DESC").
+		Preload("Grades").
+		Preload("Subjects").
+		Preload("Topics").
+		Preload("Owner").
+		Preload("Creator").
+		Limit(int(number)).
+		Find(&nfts)
+
 	if result.Error != nil {
 		return nil, result.Error
 	}
+
 	return &nfts, nil
 }
 
@@ -125,30 +142,42 @@ func (r *GormNFTRepository) GetNFTsByCreatorID(creatorID uint) ([]*models.NFT, e
 func (r *GormNFTRepository) GetNFTByTopicAndType(topicId, typeId *uint, limit uint) (*[]models.NFT, error) {
 	var nfts *[]models.NFT
 
-	query := r.db.Model(&models.NFT{})
+	query := r.db.Model(&models.NFT{}).
+		Preload("Grades").
+		Preload("Subjects").
+		Preload("Topics").
+		Preload("Owner").
+		Preload("Creator")
 
-	// Join with nft_topics table to filter by topics
-	var category string
+		// 根据 topicId 筛选
 	if topicId != nil {
-
-		switch *typeId {
-		case 0:
-			category = string(models.CategoryNewest)
-		case 1:
-			category = string(models.CategoryHot)
-		case 2:
-			category = string(models.CategoryBestseller)
-		}
 		query = query.Joins("JOIN nft_topics ON nfts.id = nft_topics.nft_id").
-			Where("nft_topics.topics IN ?", topicId)
+			Where("nft_topics.topic_id = ?", *topicId)
 	}
-	query = query.Where("nft_categories.categories IN ?", category)
 
-	// Execute the query and scan results into nfts slice
-	err := query.Distinct().Find(&nfts).Error
+	// 根据 typeId 筛选类别
+	if typeId != nil {
+		var category models.NFTCategory
+		switch *typeId {
+		case 1:
+			category = models.CategoryNewest
+		case 2:
+			category = models.CategoryHot
+		case 3:
+			category = models.CategoryBestseller
+		default:
+			return nil, fmt.Errorf("无效的 typeId")
+		}
+		query = query.Where("JSON_CONTAINS(categories, ?)", fmt.Sprintf("\"%s\"", category))
+	}
+
+	// 执行查询并限制结果数量
+	err := query.Limit(int(limit)).Find(&nfts).Error
 	if err != nil {
 		return nil, err
 	}
+
+	return nfts, nil
 
 	return nfts, nil
 }
@@ -160,9 +189,9 @@ func (r *GormNFTRepository) GetNFTByDetails(query dto.NFTQuery) ([]*models.NFT, 
 	tx := r.db.Model(&models.NFT{})
 
 	// Grade filter
-	if query.GradeID != nil {
+	if query.GradeIDs != nil {
 		tx = tx.Joins("JOIN nft_grades ON nfts.id = nft_grades.nft_id").
-			Where("nft_grades.grade_id = ?", *query.GradeID)
+			Where("nft_grades.grade_id IN ?", *query.GradeIDs)
 	}
 
 	// Subjects filter
@@ -195,13 +224,13 @@ func (r *GormNFTRepository) GetGrade() (*[]dto.IDName, error) {
 }
 
 func (r *GormNFTRepository) FindOrCreateSubject(name string) (*models.Subject, error) {
-	var subject models.Subject
+	var subject *models.Subject
 	// 尝试查找现有的Subject
 	result := r.db.Where("name = ?", name).First(&subject)
 
 	// 如果没有找到,则创建新的Subject
 	if result.Error == gorm.ErrRecordNotFound {
-		subject = models.Subject{Name: name}
+		subject = &models.Subject{Name: name}
 		if err := r.db.Create(&subject).Error; err != nil {
 			return nil, fmt.Errorf("创建Subject失败: %w", err)
 		}
@@ -209,17 +238,17 @@ func (r *GormNFTRepository) FindOrCreateSubject(name string) (*models.Subject, e
 		return nil, fmt.Errorf("查询Subject失败: %w", result.Error)
 	}
 
-	return &subject, nil
+	return subject, nil
 }
 
 func (r *GormNFTRepository) FindOrCreateGrade(name string) (*models.Grade, error) {
-	var grade models.Grade
+	var grade *models.Grade
 	// 尝试查找现有的Subject
 	result := r.db.Where("name = ?", name).First(&grade)
 
 	// 如果没有找到,则创建新的Subject
 	if result.Error == gorm.ErrRecordNotFound {
-		grade = models.Grade{Name: name}
+		grade = &models.Grade{Name: name}
 		if err := r.db.Create(&grade).Error; err != nil {
 			return nil, fmt.Errorf("创建grade失败: %w", err)
 		}
@@ -227,17 +256,17 @@ func (r *GormNFTRepository) FindOrCreateGrade(name string) (*models.Grade, error
 		return nil, fmt.Errorf("查询grade失败: %w", result.Error)
 	}
 
-	return &grade, nil
+	return grade, nil
 }
 
 func (r *GormNFTRepository) FindOrCreateTopic(name string) (*models.Topic, error) {
-	var topic models.Topic
+	var topic *models.Topic
 	// 尝试查找现有的Subject
 	result := r.db.Where("name = ?", name).First(&topic)
 
 	// 如果没有找到,则创建新的Subject
 	if result.Error == gorm.ErrRecordNotFound {
-		topic = models.Topic{Name: name}
+		topic = &models.Topic{Name: name}
 		if err := r.db.Create(&topic).Error; err != nil {
 			return nil, fmt.Errorf("创建Subject失败: %w", err)
 		}
@@ -245,7 +274,7 @@ func (r *GormNFTRepository) FindOrCreateTopic(name string) (*models.Topic, error
 		return nil, fmt.Errorf("查询Subject失败: %w", result.Error)
 	}
 
-	return &topic, nil
+	return topic, nil
 }
 
 func (r *GormNFTRepository) GetMostVisitedNFTsInTopic(topicID uint, limit int) ([]models.NFT, error) {
@@ -390,30 +419,28 @@ func (r *GormNFTRepository) GetSummaryFeatures(batchSize int) ([][]float32, erro
 }
 
 func (r *GormNFTRepository) LikeNFTByID(userID, nftID uint) error {
-    return r.db.Transaction(func(tx *gorm.DB) error {
-        like := models.Like{UserID: userID, NFTID: nftID}
-        err := tx.Create(&like).Error
-        if err != nil {
-            // 如果是唯一约束错误，我们可以忽略它
-            if !errors.Is(err, gorm.ErrDuplicatedKey) {
-                return err
-            }
-            // 如果是重复点赞，我们直接返回，不增加点赞数
-            return nil
-        }
-        
-        // 只有在成功创建Like记录后，才增加NFT的点赞数
-        return tx.Model(&models.NFT{}).Where("id = ?", nftID).
-            UpdateColumn("like_count", gorm.Expr("like_count + ?", 1)).Error
-    })
+	return r.db.Transaction(func(tx *gorm.DB) error {
+		like := models.Like{UserID: userID, NFTID: nftID}
+		err := tx.Create(&like).Error
+		if err != nil {
+			// 如果是唯一约束错误，我们可以忽略它
+			if !errors.Is(err, gorm.ErrDuplicatedKey) {
+				return err
+			}
+			// 如果是重复点赞，我们直接返回，不增加点赞数
+			return nil
+		}
+
+		// 只有在成功创建Like记录后，才增加NFT的点赞数
+		return tx.Model(&models.NFT{}).Where("id = ?", nftID).
+			UpdateColumn("like_count", gorm.Expr("like_count + ?", 1)).Error
+	})
 }
 
 func (r *GormNFTRepository) IncrementNFTCount(nftID uint, countType string) error {
 	result := r.db.Model(&models.NFT{}).Where("id = ?", nftID)
 
 	switch countType {
-	case "like":
-		result = result.UpdateColumn("like_count", gorm.Expr("like_count + ?", 1))
 	case "view":
 		result = result.UpdateColumn("view_count", gorm.Expr("view_count + ?", 1))
 	case "transaction":
@@ -446,8 +473,8 @@ func (r *GormNFTRepository) GetContentFeatures(batchSize int) ([][]float32, erro
 		if count == 0 {
 			return nil, nil // 表长度为0，跳过处理
 		}
-		
-		if err := r.db.Select("id, ContantFeature").
+
+		if err := r.db.Select("id, ContentFeature").
 			Where("id > ?", lastID).
 			Order("id").
 			Limit(batchSize).
