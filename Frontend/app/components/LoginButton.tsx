@@ -1,22 +1,37 @@
 "use client";
 
 import { useAsyncEffect } from "ahooks";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useAccount } from "wagmi";
 import Image from "next/image";
-import { getSiweMessage } from "../services";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { Dialog, DialogPanel } from "@headlessui/react";
 
 export default function LoginButton({ email }: { email: string }) {
   const [isOpen, setIsOpen] = useState(true);
   const { address, isConnected } = useAccount();
+  const account = useAccount();
+
   useAsyncEffect(async () => {
     if (address && isConnected) {
-      await getSiweMessage(address);
-      console.log(address, isConnected);
+      console.log(account);
+      const response = await fetch(`/api/siwe?wallet=${address}`, {
+        method: "GET",
+        cache: "no-store",
+        mode: "cors",
+      });
+      const result = await response.json();
+      if (result.code === 200) {
+        fetch(`/api/login`, {
+          method: "POST",
+          cache: "no-store",
+          mode: "cors",
+          body: JSON.stringify({
+            signMessage: result.data,
+            signature: "test",
+          }),
+        });
+      }
     }
   }, [address, isConnected]);
 
