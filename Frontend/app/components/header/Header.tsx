@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import LoginButton from "../LoginButton";
+import LoginButton from "./LoginButton";
 import Search from "./Search";
 import Nav from "./Nav";
 

@@ -1,15 +1,9 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import { Inter } from "next/font/google";
 import "./globals.css";
 
-import Link from "next/link";
-import LoginButton from "./components/LoginButton";
-import { cookies } from "next/headers";
 import WagmiContext from "./context/WagmiContext";
-import { ConnectButton } from "@rainbow-me/rainbowkit";
 import Header from "./components/header/Header";
-import Footer from "./components/Footer";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -25,8 +19,6 @@ export default function RootLayout({
   children: React.ReactNode;
   modal: React.ReactNode;
 }>) {
-  const email = cookies().get("email")?.value ?? "";
-
   return (
     <html lang="en">
       <body className={inter.className}>
