@@ -1,8 +1,10 @@
 package api
 
-import "io"
+import (
+	"nftPlantform/models"
+)
 
 type IPFSRepository interface {
-	UploadData(data io.Reader) (string, error)
-	GetData(hash string) ([]byte, error)
+	UploadData(createData interface{}) (*models.IpfsResponseData, error)
+	GetData(hash string) (*models.IpfsData, error)
 }

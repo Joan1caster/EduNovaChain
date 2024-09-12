@@ -30,12 +30,11 @@ func (i *IPFSHandler) UploadData(c *gin.Context) {
 		utils.Error(c, http.StatusInternalServerError, err.Error())
 		return
 	}
-	// TODO: 存储 hash 到数据库
-	utils.Success(c, gin.H{"hash": hash})
+	utils.Success(c, hash)
 }
 
 func (i *IPFSHandler) GetData(c *gin.Context) {
-	hash := c.Query("hash")
+	hash := c.Param("hash")
 	metaData, err := i.ipfsService.GetData(hash)
 	if err != nil {
 		utils.Error(c, http.StatusInternalServerError, err.Error())
