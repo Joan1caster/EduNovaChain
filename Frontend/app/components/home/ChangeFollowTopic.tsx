@@ -1,48 +1,13 @@
 "use client";
-import Image from "next/image";
+
 import { TagType } from "@/app/types";
 import { useState, useEffect, useReducer } from "react";
+import { useAsyncEffect } from "ahooks";
 
 type Props = {
   followTopics: TagType[];
   onUpdateFollowTopics: (topics: TagType[]) => void;
 };
-
-const grades: TagType[] = [
-  { name: "全部", key: -1 },
-  { name: "小学", key: 0 },
-  { name: "初中", key: 1 },
-  { name: "高中", key: 2 },
-  { name: "高校", key: 3 },
-];
-
-const subjects: TagType[] = [
-  { name: "哲学", key: 0 },
-  { name: "法学", key: 1 },
-  { name: "经济学", key: 2 },
-  { name: "文学", key: 3 },
-  { name: "理学", key: 4 },
-  { name: "教育学", key: 5 },
-  { name: "历史学", key: 6 },
-  { name: "工学", key: 7 },
-  { name: "农学", key: 5 },
-  { name: "医学", key: 6 },
-  { name: "军事学", key: 7 },
-];
-
-const topics: TagType[] = [
-  { name: "电子", key: 0 },
-  { name: "航天", key: 1 },
-  { name: "设计", key: 2 },
-  { name: "机器学习", key: 3 },
-  { name: "市场营销", key: 4 },
-  { name: "古代文学", key: 5 },
-  { name: "现代文学", key: 6 },
-  { name: "中国近代史", key: 7 },
-  { name: "美国近代史", key: 8 },
-  { name: "植物学", key: 9 },
-  { name: "军事学", key: 10 },
-];
 
 type InitialState = {
   topicKeys: number[];
@@ -61,18 +26,18 @@ const initialState: InitialState = {
 function reducer(state: InitialState, action: Action) {
   switch (action.type) {
     case "init": {
-      state.topicKeys = action.payload.map((item) => item.key);
+      state.topicKeys = action.payload.map((item) => item.id);
       state.topics = action.payload.slice();
       return state;
     }
     case "add": {
       return {
-        topicKeys: [...state.topicKeys, action.payload.key],
+        topicKeys: [...state.topicKeys, action.payload.id],
         topics: [...state.topics, action.payload],
       };
     }
     case "remove": {
-      const position = state.topicKeys.indexOf(action.payload.key);
+      const position = state.topicKeys.indexOf(action.payload.id);
       state.topicKeys.splice(position, 1);
       state.topics.splice(position, 1);
       return Object.assign({}, state);
@@ -85,14 +50,39 @@ export default function ChangeFollowTopic({
   onUpdateFollowTopics,
 }: Props) {
   const [state, dispatch] = useReducer(reducer, initialState);
-  const [currentGrade, setCurrentGrade] = useState(-1);
-  const [currentSubject, setCurrentSubject] = useState(0);
+  const [currentGrade, setCurrentGrade] = useState<number | null>();
+  const [gradeList, setGradeList] = useState<TagType[]>([]);
+
+  const [currentSubject, setCurrentSubject] = useState<number | null>();
+  const [subjectList, setSubjectList] = useState<TagType[]>([]);
+
+  const [topicList, setTopicList] = useState<TagType[]>([]);
+
+  useAsyncEffect(async () => {
+    const response = await (await fetch("/api/grade")).json();
+    if (response.count > 0) {
+      setGradeList(response.data);
+      setCurrentGrade(response.data[0].id);
+    }
+  }, []);
+
+  useAsyncEffect(async () => {
+    if (currentGrade) {
+      const response = await (
+        await fetch(`/api/subject?id=${currentGrade}`)
+      ).json();
+      if (response.count > 0) {
+        setSubjectList(response.data)
+        setCurrentSubject(response.data[0].id)
+      }
+    }
+  }, [currentGrade]);
 
   const onChangeGrade = (grade: TagType) => {
-    setCurrentGrade(grade.key);
+    setCurrentGrade(grade.id);
   };
   const onChangeSubject = (subject: TagType) => {
-    setCurrentSubject(subject.key);
+    setCurrentSubject(subject.id);
   };
 
   useEffect(() => {
@@ -114,18 +104,18 @@ export default function ChangeFollowTopic({
         <div className="w-1/3 *:inline-block gap-2 *:text-sm *:font-light *:py-0.5 *:px-3 *:mr-2 *:mb-4 *:border *:rounded-full">
           {state.topics.map((item) => (
             <div
-              key={item.key}
+              key={item.id}
               className={
-                item.key === 0
+                item.id === 0
                   ? "border-primary/50 text-primary/50"
                   : "flex items-center gap-2 border-primary text-primary"
               }
               onClick={() =>
-                item.key !== 0 && dispatch({ type: "remove", payload: item })
+                item.id !== 0 && dispatch({ type: "remove", payload: item })
               }
             >
               <span>{item.name}</span>
-              {item.key !== 0 && (
+              {item.id !== 0 && (
                 <svg
                   t="1725173545826"
                   className="inline-block mb-0.5 ml-1"
@@ -153,10 +143,10 @@ export default function ChangeFollowTopic({
           {/* grade start */}
           <div>
             <span className="text-base pr-4">年级</span>
-            {grades.map((item) => (
+            {gradeList.map((item) => (
               <span
-                key={item.key}
-                className={`${currentGrade === item.key ? "text-primary bg-primary-light_bg/50" : ""} inline-block py-1 px-4 rounded-full text-sm font-light text-gray-500 cursor-pointer hover:bg-primary-light_bg/50`}
+                key={item.id}
+                className={`${currentGrade === item.id ? "text-primary bg-primary-light_bg/50" : ""} inline-block py-1 px-4 rounded-full text-sm font-light text-gray-500 cursor-pointer hover:bg-primary-light_bg/50`}
                 onClick={() => onChangeGrade(item)}
               >
                 {item.name}
@@ -168,10 +158,10 @@ export default function ChangeFollowTopic({
 
           <div className="my-4">
             <span className="text-base pr-4">学科</span>
-            {subjects.map((item) => (
+            {subjectList.map((item) => (
               <span
-                key={item.key}
-                className={`${currentSubject === item.key ? "text-primary bg-primary-light_bg/50" : ""} inline-block py-1 px-4 rounded-full text-sm  font-light text-gray-500 cursor-pointer hover:bg-primary-light_bg/50`}
+                key={item.id}
+                className={`${currentSubject === item.id ? "text-primary bg-primary-light_bg/50" : ""} inline-block py-1 px-4 rounded-full text-sm  font-light text-gray-500 cursor-pointer hover:bg-primary-light_bg/50`}
                 onClick={() => onChangeSubject(item)}
               >
                 {item.name}
@@ -181,18 +171,18 @@ export default function ChangeFollowTopic({
           {/* sugject end */}
           {/* topic start */}
           <div className="flex flex-wrap gap-4">
-            {topics.map((item) => (
+            {topicList.map((item) => (
               <>
-                {state.topicKeys.includes(item.key) ? (
+                {state.topicKeys.includes(item.id) ? (
                   <div
-                    key={item.key}
+                    key={item.id}
                     className="py-1 px-4 rounded-full text-sm font-light bg-primary text-white"
                   >
                     {item.name}
                   </div>
                 ) : (
                   <div
-                    key={item.key}
+                    key={item.id}
                     className="py-1 px-2 rounded-full text-sm font-light border border-primary text-primary cursor-pointer"
                     onClick={() => dispatch({ type: "add", payload: item })}
                   >

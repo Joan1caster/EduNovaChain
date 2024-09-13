@@ -1,9 +1,11 @@
 import { cookies } from "next/headers";
+import { NextRequest } from "next/server";
 
 const url = process.env.NEXT_PUBLIC_URL;
 // const url = "https://f1f5-183-13-202-191.ngrok-free.app/api";
 
-export async function GET(wallet: `0x${string}`) {
+export async function GET(request: NextRequest) {
+  const wallet = request.nextUrl.searchParams.get("wallet");
   const cookie = cookies();
   const token = cookie.get("token");
   if (token) {

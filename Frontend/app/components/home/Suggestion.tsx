@@ -1,4 +1,5 @@
 "use client";
+
 import { Table_Basic, TagType } from "@/app/types";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -7,16 +8,16 @@ import Tab from "../Tab";
 import { OrderTag } from "../CustomTag";
 
 const topic: TagType[] = [
-  { name: "推荐", key: 0 },
-  { name: "电子信息", key: 1 },
-  { name: "航空航天", key: 2 },
-  { name: "人脸识别", key: 3 },
+  { name: "推荐", id: 0 },
+  { name: "电子信息", id: 1 },
+  { name: "航空航天", id: 2 },
+  { name: "人脸识别", id: 3 },
 ];
 
 const types: TagType[] = [
-  { name: "最新", key: 0 },
-  { name: "最热", key: 1 },
-  { name: "畅销", key: 2 },
+  { name: "最新", id: 0 },
+  { name: "最热", id: 1 },
+  { name: "畅销", id: 2 },
 ];
 
 const tableData: Table_Basic[] = [
@@ -64,7 +65,7 @@ const tableData: Table_Basic[] = [
   },
 ];
 
-export default function HomeSuggestion() {
+export default async function HomeSuggestion() {
   const router = useRouter();
   const [isAdd, setIsAdd] = useState<boolean>(false);
   const [topics, setTopics] = useState(topic);
@@ -95,7 +96,7 @@ export default function HomeSuggestion() {
             <ul className="flex gap-2 *:w-20 *:text-center *:rounded-full *:px-2 *:py-1 *:text-[0.75rem] *:hover:cursor-pointer">
               {topics.map((item) => (
                 <li
-                  className={`${currentTopic.key === item.key ? "text-white bg-primary" : "text-black bg-primary-light_bg/50"}`}
+                  className={`${currentTopic.id === item.id ? "text-white bg-primary" : "text-black bg-primary-light_bg/50"}`}
                   onClick={() => onSwitchTopic(item)}
                 >
                   {item.name}
