@@ -1,27 +1,34 @@
 "use client";
+
+import { useAsyncEffect } from "ahooks";
 import { useState, useEffect } from "react";
+
 let interval: NodeJS.Timeout;
+
 const Banner = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [total, setTotal] = useState(0);
+  const [data, setData] = useState([]);
   const totalSlides = 3; // 幻灯片数量
-
-  const slides = [
-    "https://via.placeholder.com/800x400?text=Slide+1",
-    "https://via.placeholder.com/800x400?text=Slide+2",
-    "https://via.placeholder.com/800x400?text=Slide+3",
-    "https://via.placeholder.com/800x400?text=Slide+1",
-    "https://via.placeholder.com/800x400?text=Slide+2",
-    "https://via.placeholder.com/800x400?text=Slide+3",
-  ];
 
   useEffect(() => {
     clearInterval(interval);
     interval = setInterval(() => {
-      setCurrentIndex((prevIndex) => (prevIndex + 1) % totalSlides);
+      setCurrentIndex((prevIndex) => (prevIndex + 1) % total);
     }, 3000); // 每3秒切换一次
 
     return () => clearInterval(interval); // 清除计时器
   }, [totalSlides, currentIndex]);
+
+  useAsyncEffect(async () => {
+    try {
+      const response = await (await fetch("/api/nfts")).json();
+      setTotal(response.count);
+      setData(response.data);
+    } catch {
+      //
+    }
+  }, []);
 
   const showSlide = (index: number) => {
     setCurrentIndex(index);
@@ -36,10 +43,10 @@ const Banner = () => {
       <div className="relative w-full">
         <div className="overflow-hidden">
           <div
-            className="flex justify-between transition-transform duration-500 ease-out"
+            className="flex transition-transform duration-500 ease-out"
             style={{ transform: `translateX(-${currentIndex * 33.3333}%)` }} // 修改为33.3333%来实现每次移动1/3
           >
-            {slides.map((slide, index) => (
+            {data.map((slide, index) => (
               <div className="flex-none w-1/3 h-[160px] pr-3" key={index}>
                 <div className="relative h-full p-6 rounded overflow-hidden bg-[url('/images/slice/banner_card_bg.jpg')] bg-cover bg-no-repeat">
                   <p className="text-[20px] text-[#293748]">创意点子标题内容</p>
@@ -54,8 +61,9 @@ const Banner = () => {
         </div>
 
         <div className="flex justify-center mt-2 space-x-2">
-          {new Array(totalSlides).fill(1).map((_, i) => (
+          {new Array(total).fill(1).map((_, i) => (
             <div
+              key={i}
               onClick={() =>
                 showSlide((currentIndex - 1 + totalSlides) % totalSlides)
               }
