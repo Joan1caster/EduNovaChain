@@ -52,6 +52,10 @@ func (s *NFTService) GetNFTDetails(id uint) (*models.NFT, error) {
 	return s.nftRepo.GetNFTByID(id)
 }
 
+func (s *NFTService) SetNFTUnSaleByID(nftID uint) error {
+	return s.nftRepo.SetNFTUnSaleByID(nftID)
+}
+
 // 点赞
 func (s *NFTService) LikeNFTByID(userID, nftID uint) error {
 	return s.nftRepo.LikeNFTByID(userID, nftID)

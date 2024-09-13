@@ -16,12 +16,13 @@ func SetupRouter(db *gorm.DB) *gin.Engine {
 	nftRepo := repository.NewGormNFTRepository(db)
 	orderRepo := repository.NewGormOrderRepository(db)
 	ipfsRepo := repository.NewIPFSRepository(config.AppConfig.IpfsApiKey)
+	tracRepo := repository.NewGormTransactionRepository(db)
 	userService := service.NewUserService(userRepo)
 	orderService := service.NewOrderService(nftRepo, orderRepo)
 	nftService := service.NewNFTService(nftRepo)
 	ipfsService := service.NewIPFSService(ipfsRepo)
 	blockChainService := service.NewBlockchainservice()
-	tradeService := service.NewNFTTrade(orderService, nftService, blockChainService)
+	tradeService := service.NewNFTTrade(userRepo, tracRepo, orderRepo, orderService, nftService, blockChainService)
 	userHandler := handlers.NewUserHandler(userService, nftService)
 	ipfsHandler := handlers.NewIPFSHandler(ipfsService)
 	nftHandler := handlers.NewNFTHandler(nftService, ipfsService, userService)
@@ -65,9 +66,10 @@ func SetupRouter(db *gorm.DB) *gin.Engine {
 
 		// 订单相关路由
 		authenticated.POST("/orders", orderHandler.ListNFT)         // 上架NFT -- pass
+		authenticated.GET("/orders/status/:txHash", orderHandler.TransactionStatus)         // 监听
 		authenticated.PUT("/orders/delist", orderHandler.DelistNFT) // 下架NFT -- pass
-		authenticated.POST("/orders/buy", orderHandler.BuyNFT) // 购买NFT
-		
+		authenticated.POST("/orders/buy", orderHandler.BuyNFT)      // 购买NFT -- pass
+
 	}
 
 	return router

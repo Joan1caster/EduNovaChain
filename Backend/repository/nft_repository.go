@@ -58,7 +58,9 @@ func (r *GormNFTRepository) GetNFTByID(id uint) (*models.NFT, error) {
 		Preload("Subjects").
 		Preload("Topics").
 		Preload("Owner").
-		Preload("Creator").First(&nft, id)
+		Preload("Creator").
+		Where("is_for_sale = ?", true).
+		First(&nft, id)
 	if result.Error != nil {
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 			return nil, errors.New("NFT not found")
@@ -68,6 +70,29 @@ func (r *GormNFTRepository) GetNFTByID(id uint) (*models.NFT, error) {
 
 	return &nft, nil
 }
+
+func (r *GormNFTRepository) SetNFTUnSaleByID(id uint) (error) {
+	var nft models.NFT
+	result := r.db.
+		Preload("Grades").
+		Preload("Subjects").
+		Preload("Topics").
+		Preload("Owner").
+		Preload("Creator").
+		First(&nft, id)
+	if result.Error != nil {
+		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			return errors.New("NFT not found")
+		}
+		return result.Error
+	}
+	nft.IsForSale = false
+	if err := r.db.Save(&nft).Error; err != nil { // 使用 Save 方法更新
+		return err
+	}
+	return nil
+}
+
 
 func (r *GormNFTRepository) GetLatestNFT(number uint) (*[]models.NFT, error) {
 	var nfts []models.NFT
@@ -115,7 +140,7 @@ func (r *GormNFTRepository) GetNFTByTokenID(tokenID string) (*models.NFT, error)
 
 func (r *GormNFTRepository) GetNFTsByOwnerID(ownerID uint) ([]*models.NFT, error) {
 	var nfts []*models.NFT
-	result := r.db.Where("owner_id = ?", ownerID).Find(&nfts)
+	result := r.db.Where("owner_id = ? AND is_for_sale = ?", ownerID, true).Find(&nfts)
 	if result.Error != nil {
 		return nil, result.Error
 	}
@@ -125,7 +150,7 @@ func (r *GormNFTRepository) GetNFTsByOwnerID(ownerID uint) ([]*models.NFT, error
 func (r *GormNFTRepository) GetNFTsByCreatorID(creatorID uint) ([]*models.NFT, error) {
 	var nfts []*models.NFT
 
-	result := r.db.Where("creator_id = ?", creatorID).
+	result := r.db.Where("creator_id = ? AND is_for_sale = ?", creatorID, true).
 		Preload("Owner").
 		Preload("Creator").
 		Order("created_at DESC").
@@ -147,7 +172,9 @@ func (r *GormNFTRepository) GetNFTByTopicAndType(topicId, typeId *uint, limit ui
 		Preload("Subjects").
 		Preload("Topics").
 		Preload("Owner").
-		Preload("Creator")
+		Preload("Creator").
+		Where("is_for_sale = ?", true) // 添加过滤条件
+
 
 		// 根据 topicId 筛选
 	if topicId != nil {
@@ -178,15 +205,14 @@ func (r *GormNFTRepository) GetNFTByTopicAndType(topicId, typeId *uint, limit ui
 	}
 
 	return nfts, nil
-
-	return nfts, nil
 }
 
 func (r *GormNFTRepository) GetNFTByDetails(query dto.NFTQuery) ([]*models.NFT, error) {
 	var nfts []*models.NFT
 
 	// Start building the query
-	tx := r.db.Model(&models.NFT{})
+	tx := r.db.Model(&models.NFT{}).Where("is_for_sale = ?", true) // 添加过滤条件
+
 
 	// Grade filter
 	if query.GradeIDs != nil {
@@ -316,7 +342,7 @@ func (r *GormNFTRepository) GetTopicBySubjectAndGrade(subjectID, gradeID *uint) 
 func (r *GormNFTRepository) GetNFTByClassification(classification string) ([]*models.NFT, error) {
 	var nfts []*models.NFT
 
-	result := r.db.Where("classification = ?", classification).
+	result := r.db.Where("classification = ? AND is_for_sale = ?", classification, true).
 		Limit(100).
 		Find(&nfts)
 
@@ -351,6 +377,7 @@ func (r *GormNFTRepository) GetNFTByFeature(feature *[]float32, similarityThresh
 		var batchNFTs []models.NFT
 		if err := r.db.Select("id, SummaryFeature").
 			Where("id > ?", lastID).
+			Where("is_for_sale = ?", true). // 添加过滤条件
 			Order("id").
 			Limit(batchSize).
 			Find(&batchNFTs).Error; err != nil {
@@ -575,3 +602,4 @@ func updateNFTCategory(db *gorm.DB, nftID uint, category models.NFTCategory) err
 	return db.Model(&models.NFT{}).Where("id = ?", nftID).
 		UpdateColumn("categories", gorm.Expr("ARRAY(SELECT DISTINCT UNNEST(ARRAY_APPEND(categories, ?)))", category)).Error
 }
+

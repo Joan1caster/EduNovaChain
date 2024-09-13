@@ -29,8 +29,9 @@ type NFT struct {
 	Creator          User          `gorm:"foreignKey:CreatorID"`
 	LikeCount        uint          `gorm:"default:0"` // 点赞次数
 	Likes            []Like        `gorm:"foreignKey:NFTID"`
-	ViewCount        uint          `gorm:"default:0"` // 浏览次数
-	TransactionCount uint          `gorm:"default:0"` // 交易次数
+	ViewCount        uint          `gorm:"default:0"`    // 浏览次数
+	TransactionCount uint          `gorm:"default:0"`    // 交易次数
+	IsForSale        bool          `gorm:"default:true"` // 是否用于交易
 }
 
 type Like struct {

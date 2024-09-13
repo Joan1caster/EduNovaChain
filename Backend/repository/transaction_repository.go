@@ -3,7 +3,6 @@ package repository
 import (
 	"errors"
 
-	"nftPlantform/api"
 	"nftPlantform/models"
 
 	"gorm.io/gorm"
@@ -13,7 +12,7 @@ type GormTransactionRepository struct {
 	db *gorm.DB
 }
 
-func NewGormTransactionRepository(db *gorm.DB) api.TransactionRepository {
+func NewGormTransactionRepository(db *gorm.DB) *GormTransactionRepository {
 	return &GormTransactionRepository{db: db}
 }
 
