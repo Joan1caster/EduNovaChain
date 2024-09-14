@@ -38,7 +38,7 @@ func (s *OrderService) ListNFTForSale(sellerID, nftID uint, price float64) (uint
 	if err != nil {
 		return 0, err
 	}
-	if order != nil && order.Status == "OPEN"{
+	if order != nil && order.Status == "OPEN" {
 		if order.Price != price {
 			order.Price = price
 			err := s.orderRepo.UpdateOrder(order)
@@ -71,14 +71,22 @@ func (s *OrderService) ValidateOrderStatus(orderID uint, userID uint) error {
 	return errors.New("order is not open")
 }
 
-func (s OrderService) SetBuyerID(orderID, buyerID uint) error {
+func (s *OrderService) ValidateOrderIsconfirmed(orderID uint) (bool, error) {
 	order, err := s.orderRepo.GetOrderByID(orderID)
 	if err != nil {
-		return err
+		return false, errors.New("error fetching order")
 	}
-	order.BuyerID = &buyerID
-	return s.orderRepo.UpdateOrder(order)
-}	
+	if order == nil {
+		return false, errors.New("order not found")
+	}
+	if order.Status == "COMPLETED" {
+		return true, nil
+	}
+	if order.Status == "CANCELLED" {
+		return false, errors.New("order has been canceled")
+	}
+	return false, nil
+}
 
 func (s OrderService) GetOrderByID(orderID uint) (*models.Order, error) {
 	order, err := s.orderRepo.GetOrderByID(orderID)

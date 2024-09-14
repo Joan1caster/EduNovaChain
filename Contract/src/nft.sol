@@ -9,7 +9,7 @@ contract EducationInnovationNFT is ERC721URIStorage, Ownable {
     uint256 private _tokenIds;
 
     struct Innovation {
-        string tokenID;
+        uint256 tokenID;
         string metadata;
         string IPFSCID;
         uint256 price;
@@ -44,7 +44,6 @@ contract EducationInnovationNFT is ERC721URIStorage, Ownable {
     {}
 
     function createInnovation(
-        string calldata tokenID,
         string calldata metadata,
         string calldata IPFSCID,
         uint256 price,
@@ -58,7 +57,7 @@ contract EducationInnovationNFT is ERC721URIStorage, Ownable {
         _setTokenURI(newItemId, IPFSCID);
 
         innovations[newItemId] = Innovation(
-            tokenID,
+            newItemId,
             metadata,
             IPFSCID,
             price,
@@ -127,6 +126,10 @@ contract EducationInnovationNFT is ERC721URIStorage, Ownable {
         require(
             innovations[tokenId].creator != address(0),
             "Innovation does not exist"
+        );
+        require(
+            innovations[tokenId].owner == msg.sender,
+            "only owner have private to operate"
         );
         innovations[tokenId].isForSale = true;
     }

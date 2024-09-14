@@ -192,7 +192,7 @@ func (h *OrderHandler) BuyNFT(c *gin.Context) {
 		utils.Error(c, http.StatusInternalServerError, "tx has been listened, please run <orders/status:txHash> to check")
 		return
 	}
-	go h.tradeService.StartTransactionListener(order.NFTID, order.ID, order.SellerID, userID.(uint), req.TxHash)
+	go h.tradeService.StartTransactionListener(order.NFTID, order.ID, userID.(uint), req.TxHash)
 
 	c.JSON(http.StatusAccepted, gin.H{
 		"status":  "submitted",
@@ -211,6 +211,7 @@ func (h *OrderHandler) TransactionStatus(c *gin.Context) {
 	statusCh, exists := common.TxStatusChannels.Get(txHash)
 	if !exists || statusCh == nil {
 		utils.Error(c, http.StatusInternalServerError, "get status failed, channel do not exists")
+		return
 	}
 	c.Stream(func(w io.Writer) bool {
 		select {
