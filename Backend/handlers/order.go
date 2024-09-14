@@ -146,7 +146,7 @@ func (h *OrderHandler) GetHistoryByNFTId(c *gin.Context) {
 	}
 
 	if len(orders) == 0 {
-		c.JSON(http.StatusOK, gin.H{"message": "No NFTs found for this creator", "data": []models.Order{}})
+		c.JSON(http.StatusOK, gin.H{"message": "No NFTs found for this ID", "data": []models.Order{}})
 		return
 	}
 
@@ -192,7 +192,7 @@ func (h *OrderHandler) BuyNFT(c *gin.Context) {
 		utils.Error(c, http.StatusInternalServerError, "tx has been listened, please run <orders/status:txHash> to check")
 		return
 	}
-	go h.tradeService.StartTransactionListener(order.NFTID, order.ID, userID.(uint), req.TxHash)
+	go h.tradeService.StartTransactionListener(order.NFTID, order.ID, order.SellerID, userID.(uint), req.TxHash)
 
 	c.JSON(http.StatusAccepted, gin.H{
 		"status":  "submitted",

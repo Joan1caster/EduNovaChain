@@ -71,6 +71,15 @@ func (s *OrderService) ValidateOrderStatus(orderID uint, userID uint) error {
 	return errors.New("order is not open")
 }
 
+func (s OrderService) SetBuyerID(orderID, buyerID uint) error {
+	order, err := s.orderRepo.GetOrderByID(orderID)
+	if err != nil {
+		return err
+	}
+	order.BuyerID = &buyerID
+	return s.orderRepo.UpdateOrder(order)
+}	
+
 func (s OrderService) GetOrderByID(orderID uint) (*models.Order, error) {
 	order, err := s.orderRepo.GetOrderByID(orderID)
 	if err != nil {

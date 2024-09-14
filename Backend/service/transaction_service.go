@@ -13,6 +13,7 @@ import (
 type TransactionListener struct {
 	NFTID        uint
 	OrderID      uint
+	SellerID     uint
 	BuyerID      uint
 	TxHash       string
 	StopChan     chan struct{}
@@ -57,10 +58,11 @@ func (s *NFTTrade) CreateTransaction(orderID, nftID, buyerID uint, txHash string
 	return nil
 }
 
-func (s *NFTTrade) StartTransactionListener(nftID, orderID, buyerID uint, txHash string) {
+func (s *NFTTrade) StartTransactionListener(nftID, orderID, sellerID, buyerID uint, txHash string) {
 	listener := &TransactionListener{
 		NFTID:        nftID,
 		OrderID:      orderID,
+		SellerID:     sellerID,
 		BuyerID:      buyerID,
 		TxHash:       txHash,
 		StopChan:     make(chan struct{}),
