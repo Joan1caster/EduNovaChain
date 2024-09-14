@@ -9,25 +9,32 @@ contract EducationInnovationNFT is ERC721URIStorage, Ownable {
     uint256 private _tokenIds;
 
     struct Innovation {
-        string title;
-        string description;
+        string tokenID;
+        string metadata;
+        string IPFSCID;
         uint256 price;
         address creator;
+        address owner;
         bool isForSale;
+        uint8 royaltyPercentage;
+        uint256 creationTime;
+        uint256 lastSaleTime;
     }
 
     mapping(uint256 => Innovation) public innovations;
     mapping(address => uint256[]) public creatorInnovations;
+    mapping(string => bool) public ExistsCID;
 
-    event InnovationCreated(
-        uint256 indexed tokenId,
-        address indexed creator,
-        string title
+    event InnovationCreate(
+        address owner,
+        uint256 tolenId,
+        uint256 creationTime
     );
+
     event InnovationPurchased(
         uint256 indexed tokenId,
-        address indexed buyer,
-        uint256 price
+        address indexed seller,
+        address indexed buyer
     );
     event InnovationPriceUpdated(uint256 indexed tokenId, uint256 newPrice);
 
@@ -37,28 +44,35 @@ contract EducationInnovationNFT is ERC721URIStorage, Ownable {
     {}
 
     function createInnovation(
-        string memory title,
-        string memory description,
+        string calldata tokenID,
+        string calldata metadata,
+        string calldata IPFSCID,
         uint256 price,
-        string memory tokenURI
+        bool isForSale
     ) public returns (uint256) {
+        require(!ExistsCID[IPFSCID], "repeated IPFSCID");
         _tokenIds += 1;
         uint256 newItemId = _tokenIds;
 
         _safeMint(msg.sender, newItemId);
-        _setTokenURI(newItemId, tokenURI);
+        _setTokenURI(newItemId, IPFSCID);
 
         innovations[newItemId] = Innovation(
-            title,
-            description,
+            tokenID,
+            metadata,
+            IPFSCID,
             price,
             msg.sender,
-            true
+            msg.sender,
+            isForSale,
+            0,
+            block.timestamp,
+            0
         );
 
         creatorInnovations[msg.sender].push(newItemId);
 
-        emit InnovationCreated(newItemId, msg.sender, title);
+        emit InnovationCreate(msg.sender, newItemId, block.timestamp);
 
         return newItemId;
     }
@@ -82,7 +96,7 @@ contract EducationInnovationNFT is ERC721URIStorage, Ownable {
 
         innovations[tokenId].isForSale = false;
 
-        emit InnovationPurchased(tokenId, buyer, msg.value);
+        emit InnovationPurchased(tokenId, innovations[tokenId].owner, buyer);
     }
 
     function updateInnovationPrice(uint256 tokenId, uint256 newPrice) public {
@@ -107,5 +121,13 @@ contract EducationInnovationNFT is ERC721URIStorage, Ownable {
             "Innovation does not exist"
         );
         return innovations[tokenId];
+    }
+
+    function updataSale(uint256 tokenId) public {
+        require(
+            innovations[tokenId].creator != address(0),
+            "Innovation does not exist"
+        );
+        innovations[tokenId].isForSale = true;
     }
 }

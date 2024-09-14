@@ -37,18 +37,17 @@ func SetupRouter(db *gorm.DB) *gin.Engine {
 		public.GET("/siweMessage", userHandler.GetSIWEMessage) // 签名 -- pass
 		public.POST("/login", userHandler.Login)               // 验证签名并登录 -- pass
 
-		public.GET("/nfts/id", nftHandler.GetNFTByID)              // 根据NFT id查NFT信息  -- pass
+		public.GET("/nfts/:id", nftHandler.GetNFTByID)             // 根据NFT id查NFT信息  -- pass
 		public.GET("/nfts/creatorID", nftHandler.GetNFTsByCreator) // 根据NFT作者查所有NFT列表 -- pass
 		// public.GET("/nfts/retrieval", nftHandler.GetNFTBySummary)   // 根据文字内容查相关NFT列表
-		public.GET("/nfts/latest/:number", nftHandler.GetLatestNFT)                // 返回最新的number个NFT -- pass
-		public.GET("/nfts/topicAndType", nftHandler.GetNFTByTopicAndType)          // 根据主题和类型查询NFT -- pass
-		public.GET("/nfts/feature", nftHandler.GetFeatures)                        // 根据输入查询特征值 -- pass
-		public.GET("/nfts/details", nftHandler.GetNFTByDetails)                    // 根据关键词等一系列信息查询 -- pass
-		public.GET("/nfts/details", nftHandler.GetNFTByDetails)                    // 根据关键词等一系列信息查询 -- pass
-		public.GET("/grade", nftHandler.GetGradeList)                              // 查询年级 -- pass
-		public.GET("/subject/:grade", nftHandler.GetSubjectByGrade)                // 根据年级查学科 -- pass
-		public.GET("/topic/subjectAndGrade", nftHandler.GetTopicBySubjectAndGrade) // 根据年级\学科查主题 -- pass
-		public.GET("/order/history", orderHandler.GetHistoryByNFTId)               // 根据NFT id查其交易记录
+		public.GET("/nfts/latest/:number", nftHandler.GetLatestNFT)                    // 返回最新的number个NFT -- pass
+		public.GET("/nfts/topicAndType", nftHandler.GetNFTByTopicAndType)              // 根据主题和类型查询NFT -- pass
+		public.GET("/nfts/feature", nftHandler.GetFeatures)                            // 根据输入查询特征值 -- pass
+		public.GET("/nfts/details", nftHandler.GetNFTByDetails)                        // 根据关键词等一系列信息查询 -- pass
+		public.GET("/grade", nftHandler.GetGradeList)                                  // 查询年级 -- pass
+		public.GET("/subject/:grade", nftHandler.GetSubjectByGrade)                    // 根据年级查学科 -- pass
+		public.GET("/topic/:subjectId/:gradeId", nftHandler.GetTopicBySubjectAndGrade) // 根据年级\学科查主题 -- pass
+		public.GET("/order/history", orderHandler.GetHistoryByNFTId)                   // 根据NFT id查其交易记录
 	}
 
 	// 需要认证的路由
@@ -66,10 +65,10 @@ func SetupRouter(db *gorm.DB) *gin.Engine {
 		authenticated.POST("/nfts/like/:nftID", nftHandler.LikeNFT)
 
 		// 订单相关路由
-		authenticated.POST("/orders", orderHandler.ListNFT)         // 上架NFT -- pass
-		authenticated.GET("/orders/status/:txHash", orderHandler.TransactionStatus)         // 监听
-		authenticated.PUT("/orders/delist", orderHandler.DelistNFT) // 下架NFT -- pass
-		authenticated.POST("/orders/buy", orderHandler.BuyNFT)      // 购买NFT -- pass
+		authenticated.POST("/orders", orderHandler.ListNFT)                         // 上架NFT -- pass
+		authenticated.GET("/orders/status/:txHash", orderHandler.TransactionStatus) // 监听
+		authenticated.PUT("/orders/delist", orderHandler.DelistNFT)                 // 下架NFT -- pass
+		authenticated.POST("/orders/buy", orderHandler.BuyNFT)                      // 购买NFT -- pass
 
 	}
 
