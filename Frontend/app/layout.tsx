@@ -14,10 +14,8 @@ export const metadata: Metadata = {
 
 export default function RootLayout({
   children,
-  modal,
 }: Readonly<{
   children: React.ReactNode;
-  modal: React.ReactNode;
 }>) {
   return (
     <html lang="en">
@@ -28,7 +26,6 @@ export default function RootLayout({
           <section className="mx-auto max-w-4xl px-4 py-6 text-[#333] sm:px-6 sm:py-6 lg:max-w-7xl lg:px-8">
             {/* <ConnectButton /> */}
             {children}
-            {modal}
           </section>
 
           <footer className="p-4 w-full mt-6 bg-primary text-gray-300">
