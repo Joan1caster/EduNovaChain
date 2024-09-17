@@ -15,7 +15,7 @@ export async function POST(request: Request) {
   });
   const data = await response.json();
   const cookie = cookies();
-  cookie.set("token", data.data.token);
+  cookie.set("Authorization", data.data.token);
 
   return Response.json(data);
 }
