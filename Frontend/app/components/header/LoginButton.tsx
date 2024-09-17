@@ -1,8 +1,9 @@
 "use client";
 
 import { useAsyncEffect } from "ahooks";
-import { useState } from "react";
-import { useAccount } from "wagmi";
+import { useEffect, useState } from "react";
+import { useAccount, useSignMessage } from "wagmi";
+import { recoverMessageAddress } from "viem";
 import Image from "next/image";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { Dialog, DialogPanel } from "@headlessui/react";
@@ -10,6 +11,14 @@ import { Dialog, DialogPanel } from "@headlessui/react";
 export default function LoginButton({ email }: { email: string }) {
   const [isOpen, setIsOpen] = useState(true);
   const { address, isConnected } = useAccount();
+  const [message, setMessage] = useState<string>("");
+  const {
+    data: signMessageData,
+    error,
+    signMessage,
+    status,
+    variables,
+  } = useSignMessage();
 
   useAsyncEffect(async () => {
     if (address && isConnected) {
@@ -20,19 +29,39 @@ export default function LoginButton({ email }: { email: string }) {
       });
       const result = await response.json();
       if (result.code === 200) {
-        fetch(`/api/login`, {
-          method: "POST",
-          cache: "no-store",
-          mode: "cors",
-          body: JSON.stringify({
-            signMessage: result.data,
-            signature: "test",
-          }),
+        setMessage(result.data);
+        signMessage({
+          account: address,
+          message: result.data,
         });
       }
     }
   }, [address, isConnected]);
 
+  useEffect(() => {
+    console.log(signMessageData);
+    if (signMessageData)
+      fetch(`/api/login`, {
+        method: "POST",
+        cache: "no-store",
+        mode: "cors",
+        body: JSON.stringify({
+          signMessage: message,
+          signature: signMessageData,
+        }),
+      });
+  }, [signMessageData]);
+
+  useEffect(() => {
+    (async () => {
+      if (variables?.message && signMessageData) {
+        const recoveredAddress = await recoverMessageAddress({
+          message: variables?.message,
+          signature: signMessageData,
+        });
+      }
+    })();
+  }, [signMessageData, variables?.message]);
   return (
     <>
       {isConnected ? (
