@@ -2,7 +2,7 @@ export type TRANSACTION_DATA_TYPE = {
   src: string;
   name: string;
   description: string;
-  cid: string;
+  id: string;
   status: string;
   like: number;
   support: number;
@@ -14,7 +14,7 @@ export const TRANSACTION_DATA: TRANSACTION_DATA_TYPE[] = [
     src: '/next.svg',
     name: '123123',
     description: 'sheizhidaone',
-    cid: '18971478236482',
+    id: '1',
     status: 'active',
     like: 0,
     support: 1,
@@ -25,7 +25,7 @@ export const TRANSACTION_DATA: TRANSACTION_DATA_TYPE[] = [
     src: '/next.svg',
     name: '123123',
     description: 'sheizhidaone',
-    cid: '18971478236483',
+    id: '2',
     status: 'active',
     like: 0,
     support: 1,
@@ -36,7 +36,7 @@ export const TRANSACTION_DATA: TRANSACTION_DATA_TYPE[] = [
     src: '/next.svg',
     name: '123123',
     description: 'sheizhidaone',
-    cid: '18971478236484',
+    id: '3',
     status: 'active',
     like: 0,
     support: 1,
@@ -47,7 +47,7 @@ export const TRANSACTION_DATA: TRANSACTION_DATA_TYPE[] = [
     src: '/next.svg',
     name: '123123',
     description: 'sheizhidaone',
-    cid: '18971478236485',
+    id: '4',
     status: 'active',
     like: 0,
     support: 1,
@@ -58,7 +58,7 @@ export const TRANSACTION_DATA: TRANSACTION_DATA_TYPE[] = [
     src: '/next.svg',
     name: '123123',
     description: 'sheizhidaone',
-    cid: '18971478236486',
+    id: '5',
     status: 'active',
     like: 0,
     support: 1,
@@ -69,7 +69,7 @@ export const TRANSACTION_DATA: TRANSACTION_DATA_TYPE[] = [
     src: '/next.svg',
     name: '123123',
     description: 'sheizhidaone',
-    cid: '18971478236487',
+    id: '6',
     status: 'active',
     like: 0,
     support: 1,
@@ -80,7 +80,7 @@ export const TRANSACTION_DATA: TRANSACTION_DATA_TYPE[] = [
     src: '/next.svg',
     name: '123123',
     description: 'sheizhidaone',
-    cid: '18971478236488',
+    id: '7',
     status: 'active',
     like: 0,
     support: 1,
@@ -91,7 +91,7 @@ export const TRANSACTION_DATA: TRANSACTION_DATA_TYPE[] = [
     src: '/next.svg',
     name: '123123',
     description: 'sheizhidaone',
-    cid: '18971478236489',
+    id: '8',
     status: 'active',
     like: 0,
     support: 1,

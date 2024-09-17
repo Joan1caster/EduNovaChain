@@ -10,7 +10,7 @@ export type Table_Basic = {
 
 export type TagType = {
   name: string;
-  key: number;
+  id: number;
 };
 
 export type TransactionRecord = {};
@@ -35,4 +35,38 @@ export type IdeaInfo = Table_Basic & {
   transactionRecord: TransactionRecord[];
   citationRecord: CitationRecord[];
   comment: Comment[];
+};
+
+export type Creator = {
+  ID: string;
+  Username: string;
+  WalletAddress: `0x${string}`;
+  CreateAt: string;
+};
+
+export type Topic = {
+  ID: string;
+  Name: string;
+  CreateAt: string;
+};
+
+export type NFT = {
+  Categories: string;
+  ContentFeature: string;
+  ContractAddress: `0x${string}`;
+  CreatedAt: string;
+  Creator: Creator;
+  CreatorID: number;
+  Grades: Topic[];
+  ID: number;
+  LikeCount: number;
+  Owner: Creator;
+  OwnerID: number;
+  Subjects: Topic[];
+  SummaryFeature: string;
+  TokenID: string;
+  Topics: Topic[];
+  TransactionCount: number;
+  UpdatedAt: string;
+  ViewCount: number;
 };
