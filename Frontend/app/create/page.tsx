@@ -1,11 +1,21 @@
 "use client";
 import { TagType } from "@/app/types";
-import { useState, useEffect, useReducer } from "react";
+import {
+  useState,
+  useEffect,
+  useReducer,
+  useRef,
+  LegacyRef,
+  MutableRefObject,
+} from "react";
 import { useFormState } from "react-dom";
 import Image from "next/image";
 import { createNFT } from "./actions";
 import SubmitButton from "../components/SubmitButton";
 import { Dialog, DialogPanel } from "@headlessui/react";
+import { useAsyncEffect } from "ahooks";
+import { useWriteContract, useReadContract } from "wagmi";
+import { ABIS, ContractConfig } from "../abis";
 
 type Props = {
   followTopics: TagType[];
@@ -13,38 +23,38 @@ type Props = {
 };
 
 const grades: TagType[] = [
-  { name: "小学", key: 0 },
-  { name: "初中", key: 1 },
-  { name: "高中", key: 2 },
-  { name: "高校", key: 3 },
+  { name: "小学", id: 0 },
+  { name: "初中", id: 1 },
+  { name: "高中", id: 2 },
+  { name: "高校", id: 3 },
 ];
 
 const subjects: TagType[] = [
-  { name: "哲学", key: 0 },
-  { name: "法学", key: 1 },
-  { name: "经济学", key: 2 },
-  { name: "文学", key: 3 },
-  { name: "理学", key: 4 },
-  { name: "教育学", key: 5 },
-  { name: "历史学", key: 6 },
-  { name: "工学", key: 7 },
-  { name: "农学", key: 5 },
-  { name: "医学", key: 6 },
-  { name: "军事学", key: 7 },
+  { name: "哲学", id: 0 },
+  { name: "法学", id: 1 },
+  { name: "经济学", id: 2 },
+  { name: "文学", id: 3 },
+  { name: "理学", id: 4 },
+  { name: "教育学", id: 5 },
+  { name: "历史学", id: 6 },
+  { name: "工学", id: 7 },
+  { name: "农学", id: 8 },
+  { name: "医学", id: 9 },
+  { name: "军事学", id: 10 },
 ];
 
 const topics: TagType[] = [
-  { name: "电子", key: 0 },
-  { name: "航天", key: 1 },
-  { name: "设计", key: 2 },
-  { name: "机器学习", key: 3 },
-  { name: "市场营销", key: 4 },
-  { name: "古代文学", key: 5 },
-  { name: "现代文学", key: 6 },
-  { name: "中国近代史", key: 7 },
-  { name: "美国近代史", key: 8 },
-  { name: "植物学", key: 9 },
-  { name: "军事学", key: 10 },
+  { name: "电子", id: 0 },
+  { name: "航天", id: 1 },
+  { name: "设计", id: 2 },
+  { name: "机器学习", id: 3 },
+  { name: "市场营销", id: 4 },
+  { name: "古代文学", id: 5 },
+  { name: "现代文学", id: 6 },
+  { name: "中国近代史", id: 7 },
+  { name: "美国近代史", id: 8 },
+  { name: "植物学", id: 9 },
+  { name: "军事学", id: 10 },
 ];
 
 type InitialState = {
@@ -64,18 +74,18 @@ const initialState: InitialState = {
 function reducer(state: InitialState, action: Action) {
   switch (action.type) {
     case "init": {
-      state.subjectKeys = action.payload.map((item) => item.key);
+      state.subjectKeys = action.payload.map((item) => item.id);
       state.subjects = action.payload.slice();
       return state;
     }
     case "add": {
       return {
-        subjectKeys: [...state.subjectKeys, action.payload.key],
+        subjectKeys: [...state.subjectKeys, action.payload.id],
         subjects: [...state.subjects, action.payload],
       };
     }
     case "remove": {
-      const position = state.subjectKeys.indexOf(action.payload.key);
+      const position = state.subjectKeys.indexOf(action.payload.id);
       state.subjectKeys.splice(position, 1);
       state.subjects.splice(position, 1);
       return Object.assign({}, state);
@@ -91,24 +101,108 @@ const initialFormState: InitialFormState = { message: "", type: "fail" };
 
 export default function Page() {
   const [state, dispatch] = useReducer(reducer, initialState);
-  const [currentGrade, setCurrentGrade] = useState(0);
+  const { data, isError, isPending, writeContractAsync } = useWriteContract();
 
   const [formState, formAction] = useFormState(createNFT, initialFormState);
 
-  const [isOpen, setIsOpen] = useState(true);
+  const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  const [currentGrade, setCurrentGrade] = useState<number | null>();
+  const [gradeList, setGradeList] = useState<TagType[]>([]);
+  const [subjectList, setSubjectList] = useState<TagType[]>([]);
+
+  const {
+    data: balance,
+    isLoading,
+    status,
+    error,
+  } = useReadContract({
+    ...ContractConfig,
+    functionName: "balanceOf",
+    args: ["0xE460De64beecE8a6f5970931C6bb3277f5Cf5c77" as `0x${string}`],
+  });
+  useAsyncEffect(async () => {
+    console.log(balance, isLoading, status, error);
+    const response = await (await fetch("/api/grade")).json();
+    if (response.count > 0) {
+      setGradeList(response.data);
+      setCurrentGrade(response.data[0].id);
+    }
+  });
+
+  useAsyncEffect(async () => {
+    if (currentGrade) {
+      const response = await (
+        await fetch(`/api/subject?id=${currentGrade}`)
+      ).json();
+      if (response.count > 0) {
+        setSubjectList(response.data);
+      }
+    }
+  }, [currentGrade]);
+
+  const onChangeGrade = (grade: TagType) => {
+    setCurrentGrade(grade.id);
+  };
 
   const onClose = () => {
     if (loading) return;
     if (formState.type === "success") setIsOpen(false);
   };
+
+  async function onSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    // setIsLoading(true);
+    // setError(null); // Clear previous errors when a new request starts
+
+    try {
+      const formData = new FormData(event.currentTarget);
+
+      const data = {
+        title: formData.get("title"),
+        summary: formData.get("summary"),
+        content: formData.get("content"),
+        topic: formData.get("topic"),
+        grade: formData.get("grade"),
+        subject: formData.get("subject"),
+        price: formData.get("price"),
+      };
+      console.log(data);
+      const tokenId = await writeContractAsync({
+        ...ContractConfig,
+        functionName: "createInnovation",
+        args: ["1", "1", "1", BigInt(Number(data.price)) * BigInt(1e18), true],
+      });
+      // const response = await fetch("/api/submit", {
+      //   method: "POST",
+      //   body: formData,
+      // });
+
+      // if (!response.ok) {
+      //   throw new Error("Failed to submit the data. Please try again.");
+      // }
+
+      // // Handle response if necessary
+      // const data = await response.json();
+      // ...
+    } catch (error) {
+      // Capture the error message to display to the user
+      // setError(error.message);
+      console.error(error);
+    } finally {
+      // setIsLoading(false);
+    }
+  }
+
   return (
     <>
-      <form className="mx-auto" action={formAction}>
+      <form className="mx-auto" onSubmit={onSubmit}>
         <div className="space-y-12">
           <div>
             <h2 className="text-base font-semibold leading-7 text-center text-[#666]">
-              发布创意
+              发布创意{balance}
+              {isLoading}
             </h2>
 
             <div className="mt-10 grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
@@ -128,8 +222,9 @@ export default function Page() {
                 <label className="block leading-6 text-[#666]">摘要</label>
                 <div className="mt-2">
                   <input
-                    id="title"
-                    name="title"
+                    id="summary"
+                    name="summary"
+                    required
                     placeholder="请输入摘要内容，明确描述清楚该创意亮点及解决的问题"
                     className="block w-full rounded-md border-0 py-1.5 text-[#666] shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-[#ccc] focus:ring-2 focus:ring-inset focus:ring-primary sm:text-sm sm:leading-6"
                   />
@@ -141,8 +236,9 @@ export default function Page() {
                 </label>
                 <div className="mt-2">
                   <input
-                    id="title"
-                    name="title"
+                    id="topic"
+                    name="topic"
+                    required
                     placeholder="请输入1-5个关键词，请用英文;隔开"
                     className="block w-full rounded-md border-0 py-1.5 text-[#666] shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-[#ccc] focus:ring-2 focus:ring-inset focus:ring-primary sm:text-sm sm:leading-6"
                   />
@@ -164,9 +260,10 @@ export default function Page() {
                 </div>
                 <div className="mt-2">
                   <textarea
-                    id="about"
-                    name="about"
+                    id="content"
+                    name="content"
                     rows={5}
+                    required
                     placeholder="请输入创意的详细内容、使用指南和预期效果，字数不限，可作为收益内容。"
                     className="block w-full rounded-md border-0 py-1.5 text-[#666] shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-[#ccc] focus:ring-2 focus:ring-inset focus:ring-primary sm:text-sm sm:leading-6"
                   ></textarea>
@@ -185,17 +282,25 @@ export default function Page() {
                 className="block w-20 rounded-md border-0 py-1.5 text-[#666] shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-primary sm:max-w-xs sm:text-sm sm:leading-6"
               >
                 {grades.map((item) => (
-                  <option>{item.name}</option>
+                  <option key={item.id} value={item.id}>
+                    {item.name}
+                  </option>
                 ))}
               </select>
 
               <div className="flex-1 rounded-md shadow-sm border bg-white py-1 px-2 flex gap-2 flex-wrap items-center">
+                {/* <input
+                  id="subject"
+                  name="subject"
+                  value={state.subjectKeys.join(",")}
+                  className="hidden"
+                /> */}
                 {state.subjects.map((item) => (
                   <div
-                    key={item.key}
+                    key={item.id}
                     className="flex items-center gap-2 text-sm px-4 py-0.5 border rounded-full border-primary bg-primary-light text-primary"
                     onClick={() =>
-                      item.key !== 0 &&
+                      item.id !== 0 &&
                       dispatch({ type: "remove", payload: item })
                     }
                   >
@@ -228,17 +333,17 @@ export default function Page() {
             {/* subject start */}
             <div className="flex flex-wrap gap-2 mt-4">
               {subjects.map((item) => (
-                <>
-                  {state.subjectKeys.includes(item.key) ? (
+                <div key={item.id}>
+                  {state.subjectKeys.includes(item.id) ? (
                     <div
-                      key={item.key}
+                      key={item.id}
                       className="py-1 px-2 rounded-full text-sm font-light bg-primary text-white"
                     >
                       {item.name}
                     </div>
                   ) : (
                     <div
-                      key={item.key}
+                      key={item.id}
                       className="py-1 px-2 rounded-full text-sm font-light border border-primary text-primary cursor-pointer"
                       onClick={() => dispatch({ type: "add", payload: item })}
                     >
@@ -261,20 +366,22 @@ export default function Page() {
                       {item.name}
                     </div>
                   )}
-                </>
+                </div>
               ))}
             </div>
             {/* subject end */}
           </div>
           <div className="sm:col-span-3">
             <label className="block leading-6 text-[#666]">售价</label>
-            <div className="mt-2">
+            <div className="w-1/3 mt-2 rounded-md shadow-sm border bg-white py-1 px-2 flex flex-wrap items-center">
               <input
-                id="title"
-                name="title"
-                placeholder="0.00ETH"
-                className="block w-full sm:max-w-xs rounded-md border-0 py-1.5 text-[#666] text-right shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-[#ccc] focus:ring-2 focus:ring-inset focus:ring-primary sm:text-sm sm:leading-6"
+                id="price"
+                name="price"
+                required
+                placeholder="0.00"
+                className="text-sm text-right flex-1 py-0.5 placeholder:text-[#CCC] border-none outline-none shadow-none focus:shadow-none focus:ring-offset-0 focus:ring-0"
               />
+              <span className="text-[#CCC]">ETH</span>
             </div>
           </div>
         </div>
