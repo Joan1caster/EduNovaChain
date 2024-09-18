@@ -28,7 +28,6 @@ export const ABIS = [
     type: "function",
     name: "createInnovation",
     inputs: [
-      { name: "tokenID", type: "string", internalType: "string" },
       { name: "metadata", type: "string", internalType: "string" },
       { name: "IPFSCID", type: "string", internalType: "string" },
       { name: "price", type: "uint256", internalType: "uint256" },
@@ -64,7 +63,7 @@ export const ABIS = [
         type: "tuple",
         internalType: "struct EducationInnovationNFT.Innovation",
         components: [
-          { name: "tokenID", type: "string", internalType: "string" },
+          { name: "tokenID", type: "uint256", internalType: "uint256" },
           { name: "metadata", type: "string", internalType: "string" },
           { name: "IPFSCID", type: "string", internalType: "string" },
           { name: "price", type: "uint256", internalType: "uint256" },
@@ -91,7 +90,7 @@ export const ABIS = [
     name: "innovations",
     inputs: [{ name: "", type: "uint256", internalType: "uint256" }],
     outputs: [
-      { name: "tokenID", type: "string", internalType: "string" },
+      { name: "tokenID", type: "uint256", internalType: "uint256" },
       { name: "metadata", type: "string", internalType: "string" },
       { name: "IPFSCID", type: "string", internalType: "string" },
       { name: "price", type: "uint256", internalType: "uint256" },
@@ -478,6 +477,6 @@ export const ABIS = [
 ];
 
 export const ContractConfig = {
-  address: "0xd6Cc631bFfB9118B923277180998637d6A2D6340" as `0x${string}`,
+  address: "0x863606C4105127DF22ffC3b7864A35790348Ff30" as `0x${string}`,
   abi: ABIS,
 };
