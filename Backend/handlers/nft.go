@@ -198,6 +198,46 @@ func (h *NFTHandler) GetLatestNFT(c *gin.Context) {
 	})
 }
 
+func (h *NFTHandler) GetHottestNFT(c *gin.Context) {
+	numberStr := c.Param("number")
+	number, err := strconv.Atoi(numberStr)
+	if err != nil || number <= 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid number parameter"})
+		return
+	}
+	nfts, err := h.nftService.GetHottestNFT(uint(number))
+	if err != nil || len(*nfts) == 0 {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve NFTs"})
+		c.Error(err)
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{
+		"message": "NFTs retrieved successfully",
+		"data":    nfts,
+		"count":   len(*nfts),
+	})
+}
+
+func (h *NFTHandler) GetHighTradingNFT(c *gin.Context) {
+	numberStr := c.Param("number")
+	number, err := strconv.Atoi(numberStr)
+	if err != nil || number <= 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid number parameter"})
+		return
+	}
+	nfts, err := h.nftService.GetHighTradingNFT(uint(number))
+	if err != nil || len(*nfts) == 0 {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve NFTs"})
+		c.Error(err)
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{
+		"message": "NFTs retrieved successfully",
+		"data":    nfts,
+		"count":   len(*nfts),
+	})
+}
+
 func (h *NFTHandler) GetNFTByTopicAndType(c *gin.Context) {
 	var req struct {
 		TopicId *uint `json:"topicId"`
@@ -292,7 +332,7 @@ func (h *NFTHandler) GetTopicBySubjectAndGrade(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body", "details": err.Error()})
 		return
 	}
-	topics, err := h.nftService.GetTopicBySubjectAndGrade(req.Gradeids, req.Gradeids)
+	topics, err := h.nftService.GetTopicBySubjectAndGrade(req.Subjectids, req.Gradeids)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"message": "GetTopicBySubjectAndGrade from database error"})
 	}

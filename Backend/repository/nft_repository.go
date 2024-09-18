@@ -112,6 +112,44 @@ func (r *GormNFTRepository) GetLatestNFT(number uint) (*[]models.NFT, error) {
 	return &nfts, nil
 }
 
+func (r *GormNFTRepository) GetHottestNFT(number uint) (*[]models.NFT, error) {
+	var nfts []models.NFT
+
+	result := r.db.Order("view_count DESC").
+		Preload("Grades").
+		Preload("Subjects").
+		Preload("Topics").
+		Preload("Owner").
+		Preload("Creator").
+		Limit(int(number)).
+		Find(&nfts)
+
+	if result.Error != nil {
+		return nil, result.Error
+	}
+
+	return &nfts, nil
+}
+
+func (r *GormNFTRepository) GetHighTradingNFT(number uint) (*[]models.NFT, error) {
+	var nfts []models.NFT
+
+	result := r.db.Order("transaction_count DESC").
+		Preload("Grades").
+		Preload("Subjects").
+		Preload("Topics").
+		Preload("Owner").
+		Preload("Creator").
+		Limit(int(number)).
+		Find(&nfts)
+
+	if result.Error != nil {
+		return nil, result.Error
+	}
+
+	return &nfts, nil
+}
+
 func (r *GormNFTRepository) GetFavoriteTopic(userID uint) (*models.Topic, error) {
 	var topics []models.Topic
 	err := r.db.Table("topics").
@@ -311,7 +349,7 @@ func (r *GormNFTRepository) GetMostVisitedNFTsInTopic(topicID uint, limit int) (
 	return nfts, err
 }
 
-func (r *GormNFTRepository) GetTopicBySubjectAndGrade(subjectIDs, gradeIDs *[]uint) ([]dto.IDName, error) {
+func (r *GormNFTRepository) GetTopicBySubjectAndGrade(subjectIDs, gradeIDs []*uint) ([]dto.IDName, error) {
 	var results []dto.IDName
 
 	query := r.db.Table("topics").
@@ -319,14 +357,14 @@ func (r *GormNFTRepository) GetTopicBySubjectAndGrade(subjectIDs, gradeIDs *[]ui
 		Joins("JOIN nft_topics ON topics.id = nft_topics.topic_id").
 		Joins("JOIN nfts ON nfts.id = nft_topics.nft_id")
 
-	if subjectIDs != nil && len(*subjectIDs) > 0 {
+	if len(subjectIDs) > 0 {
 		query = query.Joins("JOIN nft_subjects ON nfts.id = nft_subjects.nft_id").
-			Where("nft_subjects.subject_id IN ?", *subjectIDs)
+			Where("nft_subjects.subject_id IN ?", subjectIDs)
 	}
 
-	if gradeIDs != nil && len(*gradeIDs) > 0 {
+	if len(gradeIDs) > 0 {
 		query = query.Joins("JOIN nft_grades ON nfts.id = nft_grades.nft_id").
-			Where("nft_grades.grade_id IN ?", *gradeIDs)
+			Where("nft_grades.grade_id IN ?", gradeIDs)
 	}
 
 	if err := query.Find(&results).Error; err != nil {
