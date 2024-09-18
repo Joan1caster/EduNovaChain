@@ -7,8 +7,8 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"os"
 	"io"
+	"os"
 
 	"github.com/sirupsen/logrus"
 
@@ -44,7 +44,17 @@ func ReadABI(filePath string) (json.RawMessage, string, error) {
 	}
 	jsonABI := contractABI.ABI
 	stringABI := string(jsonABI)
-
+	file, err := os.Create("abi/abi.json")
+	if err != nil {
+		return nil, "", fmt.Errorf("创建文件失败: %v", err)
+	}
+	defer file.Close()
+	encoder := json.NewEncoder(file)
+	encoder.SetIndent("", "  ") // 设置缩进格式化输出
+	err = encoder.Encode(jsonABI)
+	if err != nil {
+		return nil, "", fmt.Errorf("创建文件失败: %v", err)
+	}
 	return jsonABI, stringABI, nil
 }
 
@@ -60,29 +70,29 @@ func GenerateNonce() string {
 
 // Float32ArrayToBlob converts a [512]float32 to []byte
 func Float32ArrayToBlob(arr [512]float32) ([]byte, error) {
-    buf := new(bytes.Buffer)
-    for _, v := range arr {
-        err := binary.Write(buf, binary.LittleEndian, v)
-        if err != nil {
-            return nil, err
-        }
-    }
-    return buf.Bytes(), nil
+	buf := new(bytes.Buffer)
+	for _, v := range arr {
+		err := binary.Write(buf, binary.LittleEndian, v)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return buf.Bytes(), nil
 }
 
 // BlobToFloat32Array converts []byte to [512]float32
 func BlobToFloat32Array(b []byte) ([]float32, error) {
-    arr := make([]float32, 512)
-    buf := bytes.NewReader(b)
-    for i := 0; i < 512; i++ {
-        var v float32
-        err := binary.Read(buf, binary.LittleEndian, &v)
-        if err != nil {
-            return arr, err
-        }
-        arr[i] = v
-    }
-    return arr, nil
+	arr := make([]float32, 512)
+	buf := bytes.NewReader(b)
+	for i := 0; i < 512; i++ {
+		var v float32
+		err := binary.Read(buf, binary.LittleEndian, &v)
+		if err != nil {
+			return arr, err
+		}
+		arr[i] = v
+	}
+	return arr, nil
 }
 
 func SetupLogger() {

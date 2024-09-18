@@ -153,7 +153,7 @@ func (s *NFTService) GetNFTByTopicAndType(topicId *uint, typeId *uint, limit uin
 	return s.nftRepo.GetNFTByTopicAndType(topicId, typeId, limit)
 }
 
-func (s *NFTService) GetTopicBySubjectAndGrade(subjectId, gradeId *uint) ([]dto.IDName, error) {
+func (s *NFTService) GetTopicBySubjectAndGrade(subjectId, gradeId *[]uint) ([]dto.IDName, error) {
 	return s.nftRepo.GetTopicBySubjectAndGrade(subjectId, gradeId)
 }
 

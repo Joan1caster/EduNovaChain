@@ -29,3 +29,8 @@ type OrderMessage struct {
 	NFTId uint `json:"nftId" binding:"required"`
 	Price float64 `json:"price" binding:"required"`
 }
+
+type SubjectsAndGrades struct {
+	Subjectids []*uint `json:"subjectIds"`
+	Gradeids []*uint `json:"gradeIds"`
+}

@@ -287,19 +287,12 @@ func (h *NFTHandler) GetNFTByDetails(c *gin.Context) {
 }
 
 func (h *NFTHandler) GetTopicBySubjectAndGrade(c *gin.Context) {
-	subjectId_ := c.Param("subjectId")
-	subjectId, err := strconv.Atoi(subjectId_)
-	if err != nil {
-		utils.Error(c, http.StatusBadRequest, "input subjectId error")
+	var req dto.SubjectsAndGrades
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body", "details": err.Error()})
+		return
 	}
-	subjectIduint := uint(subjectId)
-	gradeId_ := c.Param("gradeId")
-	gradeId, err := strconv.Atoi(gradeId_)
-	if err != nil {
-		utils.Error(c, http.StatusBadRequest, "input subjectId error")
-	}
-	gradeIduint := uint(gradeId)
-	topics, err := h.nftService.GetTopicBySubjectAndGrade(&subjectIduint, &gradeIduint)
+	topics, err := h.nftService.GetTopicBySubjectAndGrade(req.Gradeids, req.Gradeids)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"message": "GetTopicBySubjectAndGrade from database error"})
 	}
