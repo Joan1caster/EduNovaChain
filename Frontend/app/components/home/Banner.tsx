@@ -42,7 +42,7 @@ const Banner = () => {
         <div className="new_EN">New</div>
         <div className="new_ZH">最新</div>
       </div>
-      <div className="relative w-full">
+      <div className="relative w-full h-[160px]">
         <div className="overflow-hidden">
           <div
             className="flex transition-transform duration-500 ease-out"

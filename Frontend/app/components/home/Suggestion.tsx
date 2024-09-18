@@ -9,9 +9,9 @@ import { OrderTag } from "../CustomTag";
 
 const topic: TagType[] = [
   { name: "推荐", id: 0 },
-  { name: "电子信息", id: 1 },
-  { name: "航空航天", id: 2 },
-  { name: "人脸识别", id: 3 },
+  // { name: "电子信息", id: 1 },
+  // { name: "航空航天", id: 2 },
+  // { name: "人脸识别", id: 3 },
 ];
 
 const types: TagType[] = [
@@ -102,18 +102,18 @@ export default async function HomeSuggestion() {
                   {item.name}
                 </li>
               ))}
-              <li
+              {/* <li
                 className="text-black bg-primary-light_bg/50"
                 onClick={() => setIsAdd(true)}
               >
                 + 新增主题
-              </li>
+              </li> */}
             </ul>
             <div className="flex gap-2">
-              <Tab data={types} onChange={onChange} />
+              {/* <Tab data={types} onChange={onChange} />
               <div className="bg-primary-light_bg/50 px-2 py-1 rounded-md text-[0.75rem] cursor-pointer">
                 查看更多
-              </div>
+              </div> */}
             </div>
           </div>
           {/* header end */}
