@@ -521,9 +521,8 @@ func (r *GormNFTRepository) IncrementNFTCount(nftID uint, countType string) erro
 
 	return nil
 }
-
 func (r *GormNFTRepository) GetContentFeatures(batchSize int) ([][]float32, error) {
-	var allMetadatatFeatures [][]float32
+	var allContentFeatures [][]float32
 	var lastID uint = 0
 	for {
 		var batch []models.NFT
@@ -536,7 +535,7 @@ func (r *GormNFTRepository) GetContentFeatures(batchSize int) ([][]float32, erro
 			return nil, nil // 表长度为0，跳过处理
 		}
 
-		if err := r.db.Select("id, ContentFeature").
+		if err := r.db.Select("id, content_feature").
 			Where("id > ?", lastID).
 			Order("id").
 			Limit(batchSize).
@@ -549,11 +548,14 @@ func (r *GormNFTRepository) GetContentFeatures(batchSize int) ([][]float32, erro
 		}
 
 		for _, nft := range batch {
-			summaryFeatureFloat, err := utils.BlobToFloat32Array(nft.SummaryFeature)
+			contentFeatureFloat, err := utils.BlobToFloat32Array(nft.ContentFeature)
 			if err != nil {
 				return nil, err
 			}
-			allMetadatatFeatures = append(allMetadatatFeatures, summaryFeatureFloat)
+			if len(contentFeatureFloat) == 0 {
+				return nil, errors.New("get feature empty")
+			}
+			allContentFeatures = append(allContentFeatures, contentFeatureFloat)
 			lastID = nft.ID
 		}
 
@@ -561,7 +563,7 @@ func (r *GormNFTRepository) GetContentFeatures(batchSize int) ([][]float32, erro
 			break
 		}
 	}
-	return allMetadatatFeatures, nil
+	return allContentFeatures, nil
 }
 
 func (r *GormNFTRepository) UpdateNFT(nft *models.NFT) error {

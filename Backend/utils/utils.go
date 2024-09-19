@@ -80,11 +80,15 @@ func Float32ArrayToBlob(arr [512]float32) ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
-// BlobToFloat32Array converts []byte to [512]float32
 func BlobToFloat32Array(b []byte) ([]float32, error) {
-	arr := make([]float32, 512)
+	// 计算可以转换的float32数量
+	count := len(b) / 4 // 每个float32占4字节
+
+	// 创建相应大小的float32切片
+	arr := make([]float32, count)
+
 	buf := bytes.NewReader(b)
-	for i := 0; i < 512; i++ {
+	for i := 0; i < count; i++ {
 		var v float32
 		err := binary.Read(buf, binary.LittleEndian, &v)
 		if err != nil {
