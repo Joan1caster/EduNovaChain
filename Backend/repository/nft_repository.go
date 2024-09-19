@@ -21,7 +21,7 @@ func NewGormNFTRepository(db *gorm.DB) *GormNFTRepository {
 	return &GormNFTRepository{db: db}
 }
 
-func (r *GormNFTRepository) CreateNFT(tokenID, contractAddress string, ownerID, creatorID uint, metadataURI string, summaryFeature, contentFeature [512]float32, grade *models.Grade, subject *models.Subject, topic *models.Topic) (uint, error) {
+func (r *GormNFTRepository) CreateNFT(tokenID, contractAddress string, ownerID, creatorID uint, metadataURI string, summaryFeature, contentFeature [512]float32, grade *models.Grade, subject *models.Subject, topic *models.Topic, price float64) (uint, error) {
 	summaryFeatureBlob, err := utils.Float32ArrayToBlob(summaryFeature)
 	if err != nil {
 		return 0, err
@@ -42,6 +42,7 @@ func (r *GormNFTRepository) CreateNFT(tokenID, contractAddress string, ownerID, 
 		Subjects:        []models.Subject{*subject},
 		Topics:          []models.Topic{*topic},
 		Categories:      []models.NFTCategory{models.CategoryNewest},
+		Price:           price,
 	}
 	result := r.db.Create(&nft)
 	if result.Error != nil {
@@ -250,7 +251,7 @@ func (r *GormNFTRepository) GetNFTByDetails(query dto.NFTQuery) ([]*models.NFT, 
 	tx := r.db.Model(&models.NFT{}).Where("is_for_sale = ?", true) // 添加过滤条件
 
 	// Grade filter
-	if query.GradeIDs != nil {
+	if query.GradeIDs != nil && len(*query.GradeIDs) != 0 {
 		tx = tx.Joins("JOIN nft_grades ON nfts.id = nft_grades.nft_id").
 			Where("nft_grades.grade_id IN ?", *query.GradeIDs)
 	}

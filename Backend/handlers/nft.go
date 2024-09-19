@@ -77,7 +77,7 @@ func (h *NFTHandler) CreateNFT(c *gin.Context) {
 	}
 	creatorID := user.ID
 
-	nftID, err := h.nftService.CreateNFT(req.TokenID, req.ContractAddress, creatorID, creatorID, req.MetadataURI, req.SummaryFeature, req.ContentFeature, req.Grade, req.Subject, req.Topic)
+	nftID, err := h.nftService.CreateNFT(req.TokenID, req.ContractAddress, creatorID, creatorID, req.MetadataURI, req.SummaryFeature, req.ContentFeature, req.Grade, req.Subject, req.Topic, req.Price)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create NFT, tokenID exist"})
 		c.Error(err)
@@ -254,7 +254,7 @@ func (h *NFTHandler) GetNFTByTopicAndType(c *gin.Context) {
 		c.Error(err)
 	}
 	if len(*nfts) == 0 {
-		c.JSON(http.StatusOK, gin.H{"message": "No NFTs found for this classification", "data": []models.NFT{}})
+		c.JSON(http.StatusOK, gin.H{"message": "No NFTs found for this topic and type", "data": []models.NFT{}})
 		return
 	}
 
@@ -293,7 +293,7 @@ func (h *NFTHandler) GetSubjectByGrade(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"message": "GetSubjectByGrade from database error"})
 	}
 	if len(*subjects) == 0 {
-		c.JSON(http.StatusOK, gin.H{"message": "No NFTs found for this classification", "data": []models.NFT{}})
+		c.JSON(http.StatusOK, gin.H{"message": "No subject found by this grade", "data": []models.NFT{}})
 		return
 	}
 
@@ -315,7 +315,7 @@ func (h *NFTHandler) GetNFTByDetails(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"message": "GetNFTByDetails from database error"})
 	}
 	if len(nfts) == 0 {
-		c.JSON(http.StatusOK, gin.H{"message": "No NFTs found for this classification", "data": []models.NFT{}})
+		c.JSON(http.StatusOK, gin.H{"message": "No NFTs found for this details", "data": []models.NFT{}})
 		return
 	}
 

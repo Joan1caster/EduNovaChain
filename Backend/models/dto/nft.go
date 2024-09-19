@@ -23,14 +23,15 @@ type CreateNFT struct {
 	Grade           string       `json:"grade" binging:"required"`
 	Subject         string       `json:"subject" binging:"required"`
 	Topic           string       `json:"topic" binging:"required"`
+	Price           float64      `json:"price" binging:"required"`
 }
 
 type OrderMessage struct {
-	NFTId uint `json:"nftId" binding:"required"`
+	NFTId uint    `json:"nftId" binding:"required"`
 	Price float64 `json:"price" binding:"required"`
 }
 
 type SubjectsAndGrades struct {
 	Subjectids []*uint `json:"subjectIds"`
-	Gradeids []*uint `json:"gradeIds"`
+	Gradeids   []*uint `json:"gradeIds"`
 }

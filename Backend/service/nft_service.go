@@ -25,7 +25,7 @@ func NewNFTService(nftRepo *repository.GormNFTRepository) *NFTService {
 }
 
 // CreateNFT 创建新的NFT
-func (s *NFTService) CreateNFT(tokenID, contractAddress string, ownerID, creatorID uint, metadataURI string, summaryFeature, metadataFeature [512]float32, grade, subject, topic string) (uint, error) {
+func (s *NFTService) CreateNFT(tokenID, contractAddress string, ownerID, creatorID uint, metadataURI string, summaryFeature, metadataFeature [512]float32, grade, subject, topic string, price float64) (uint, error) {
 	grade_, err := s.nftRepo.FindOrCreateGrade(grade)
 	if err != nil {
 		return 0, err
@@ -40,7 +40,7 @@ func (s *NFTService) CreateNFT(tokenID, contractAddress string, ownerID, creator
 	if err != nil {
 		return 0, err
 	}
-	return s.nftRepo.CreateNFT(tokenID, contractAddress, ownerID, creatorID, metadataURI, summaryFeature, metadataFeature, grade_, subject_, topic_)
+	return s.nftRepo.CreateNFT(tokenID, contractAddress, ownerID, creatorID, metadataURI, summaryFeature, metadataFeature, grade_, subject_, topic_, price)
 }
 
 // GetNFTDetails 获取NFT详情
@@ -68,7 +68,7 @@ func (s *NFTService) GetNFTByDetails(query dto.NFTQuery) ([]*models.NFT, error) 
 		return nil, err
 	}
 	var res []*models.NFT
-	if query.Keyword != nil {
+	if query.Keyword != nil && len(*query.Keyword) != 0 {
 		var nftsWithSimilarity []*models.NFTWithSimilarity
 		targetFeature, err := utils.GetFeatures([]string{*query.Keyword})
 		if err != nil {

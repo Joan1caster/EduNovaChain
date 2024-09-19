@@ -22,11 +22,12 @@ type NFT struct {
 	Subjects         []Subject     `gorm:"many2many:nft_subjects;"` // 所属学科
 	Topics           []Topic       `gorm:"many2many:nft_topics;"`   // 所属主题
 	Categories       []NFTCategory `gorm:"type:json;serializer:json"`
-	MetadataURI      string        `gorm:"type:varchar(50);not null"` // IPFS的存储数据，名称-摘要-标题等
-	SummaryFeature   []byte        `gorm:"type:blob;not null"`        // 摘要特征值
-	ContentFeature   []byte        `gorm:"type:blob;not null"`        // 正文特征值
+	MetadataURI      string        `gorm:"type:varchar(100);not null"` // IPFS的存储数据，名称-摘要-标题等
+	SummaryFeature   []byte        `gorm:"type:blob;not null"`         // 摘要特征值
+	ContentFeature   []byte        `gorm:"type:blob;not null"`         // 正文特征值
 	Owner            User          `gorm:"foreignKey:OwnerID"`
 	Creator          User          `gorm:"foreignKey:CreatorID"`
+	Price            float64       `gorm:"type:decimal(20,8);default:0.0786"`
 	LikeCount        uint          `gorm:"default:0"` // 点赞次数
 	Likes            []Like        `gorm:"foreignKey:NFTID"`
 	ViewCount        uint          `gorm:"default:0"`    // 浏览次数
