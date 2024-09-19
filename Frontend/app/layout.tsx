@@ -27,7 +27,7 @@ export default function RootLayout({
     <html lang="en">
       <body className={inter.className}>
         <div
-          className={`${relativeUrl === "/" && "bg-[url('/images/slice/banner_bg.png')] bg-[length:100%_auto] bg-no-repeat"}`}
+          className={`relative min-w-screen min-h-screen w-full h-full ${relativeUrl === "/" && "bg-[url('/images/slice/banner_bg.png')] bg-[length:100%_auto] bg-no-repeat"}`}
         >
           <WagmiContext>
             <Header />
@@ -37,7 +37,7 @@ export default function RootLayout({
               {children}
             </section>
 
-            <footer className="p-4 w-full mt-6 bg-primary text-gray-300">
+            <footer className="fixed bottom-0 p-4 w-full mt-6 bg-primary text-gray-300">
               <div className="text-center text-sm font-light">
                 Copyright © 2024 {process.env.NEXT_PUBLIC_APP_NAME}.All Rights
                 Reserved.

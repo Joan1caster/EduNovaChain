@@ -477,6 +477,6 @@ export const ABIS = [
 ];
 
 export const ContractConfig = {
-  address: "0x863606C4105127DF22ffC3b7864A35790348Ff30" as `0x${string}`,
+  address: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS as `0x${string}`,
   abi: ABIS,
 };
