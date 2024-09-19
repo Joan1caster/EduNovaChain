@@ -4,6 +4,7 @@ import "./globals.css";
 
 import WagmiContext from "./context/WagmiContext";
 import Header from "./components/header/Header";
+import { headers } from "next/headers";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -17,24 +18,33 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const headerList = headers();
+  const referer = headerList.get("referer"); // 从请求头中获取完整的 URL
+
+  // 获取相对路径 (假设 referer 是完整的 URL)
+  const relativeUrl = referer ? new URL(referer).pathname : "";
   return (
     <html lang="en">
       <body className={inter.className}>
-        <WagmiContext>
-          <Header />
+        <div
+          className={`${relativeUrl === "/" && "bg-[url('/images/slice/banner_bg.png')] bg-[length:100%_auto] bg-no-repeat"}`}
+        >
+          <WagmiContext>
+            <Header />
 
-          <section className="mx-auto max-w-4xl px-4 py-6 text-[#333] sm:px-6 sm:py-6 lg:max-w-7xl lg:px-8">
-            {/* <ConnectButton /> */}
-            {children}
-          </section>
+            <section className="w-[1548px] mx-auto my-6 text-[#333]">
+              {/* <ConnectButton /> */}
+              {children}
+            </section>
 
-          <footer className="p-4 w-full mt-6 bg-primary text-gray-300">
-            <div className="text-center text-sm font-light">
-              Copyright © 2024 {process.env.NEXT_PUBLIC_APP_NAME}.All Rights
-              Reserved.
-            </div>
-          </footer>
-        </WagmiContext>
+            <footer className="p-4 w-full mt-6 bg-primary text-gray-300">
+              <div className="text-center text-sm font-light">
+                Copyright © 2024 {process.env.NEXT_PUBLIC_APP_NAME}.All Rights
+                Reserved.
+              </div>
+            </footer>
+          </WagmiContext>
+        </div>
       </body>
     </html>
   );

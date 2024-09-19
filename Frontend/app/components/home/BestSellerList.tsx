@@ -62,7 +62,7 @@ export default function BestSellerList() {
     //
   };
   return (
-    <div className="w-full my-8 p-10 bg-white rounded border border-primary-border">
+    <div className="w-full my-8 px-10 py-8 bg-white rounded border border-primary-border">
       {/* header start */}
       <div className="flex justify-between gap-2 items-center">
         <div className="text-lg">畅销榜单</div>

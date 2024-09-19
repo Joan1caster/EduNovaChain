@@ -4,6 +4,7 @@ import { NFT } from "@/app/types";
 import { useAsyncEffect } from "ahooks";
 import Link from "next/link";
 import { useState, useEffect } from "react";
+import { BannerCard } from "../CustomTag";
 
 let interval: NodeJS.Timeout;
 
@@ -11,16 +12,17 @@ const Banner = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [total, setTotal] = useState(0);
   const [data, setData] = useState<NFT[]>([]);
-  const totalSlides = 3; // 幻灯片数量
 
   useEffect(() => {
     clearInterval(interval);
     interval = setInterval(() => {
-      setCurrentIndex((prevIndex) => (prevIndex + 1) % total);
-    }, 3000); // 每3秒切换一次
+      setCurrentIndex((prevIndex) =>
+        prevIndex + 1 >= total ? 0 : prevIndex + 1
+      );
+    }, 3000);
 
-    return () => clearInterval(interval); // 清除计时器
-  }, [totalSlides, currentIndex]);
+    return () => clearInterval(interval);
+  }, [total, currentIndex]);
 
   useAsyncEffect(async () => {
     try {
@@ -37,19 +39,16 @@ const Banner = () => {
   };
 
   return (
-    <div className="w-full bg-[url('/images/slice/banner_bg.png')]">
-      <div className="banner_title">
-        <div className="new_EN">New</div>
-        <div className="new_ZH">最新</div>
-      </div>
-      <div className="relative w-full h-[160px]">
+    <div className="w-full">
+      <div className="w-[332px] h-[62px] mx-auto bg-[url('/images/slice/banner_title.png')] bg-no-repeat bg-cover"></div>
+      <div className="relative w-full h-72 mt-9">
         <div className="overflow-hidden">
           <div
-            className="flex transition-transform duration-500 ease-out"
-            style={{ transform: `translateX(-${currentIndex * 33.3333}%)` }} // 修改为33.3333%来实现每次移动1/3
+            className="flex gap-x-6 flex-nowrap w-full transition-transform duration-500 ease-out"
+            style={{ transform: `translateX(-${currentIndex * 524}px)` }} // 修改为33.3333%来实现每次移动1/3
           >
             {data.map((slide: NFT, index: number) => (
-              <div className="flex-none w-1/3 h-[160px] pr-3" key={index}>
+              <BannerCard order={index} key={index}>
                 <div className="relative h-full p-6 rounded overflow-hidden bg-[url('/images/slice/banner_card_bg.jpg')] bg-cover bg-no-repeat">
                   <Link href={`/nft/${slide.ID}`}>
                     <p className="text-[20px] text-[#293748]">
@@ -61,7 +60,7 @@ const Banner = () => {
                     </p>
                   </Link>
                 </div>
-              </div>
+              </BannerCard>
             ))}
           </div>
         </div>
@@ -70,7 +69,7 @@ const Banner = () => {
           {new Array(total).fill(1).map((_, i) => (
             <div
               key={i}
-              onClick={() => showSlide((currentIndex - 1 + total) % total)}
+              onClick={() => showSlide(i)}
               className={`${currentIndex === i ? "w-6 bg-primary" : "w-2 bg-primary/20"} hover:bg-blue-200 h-2 rounded cursor-pointer`}
             ></div>
           ))}

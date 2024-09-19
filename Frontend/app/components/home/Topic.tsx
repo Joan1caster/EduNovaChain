@@ -3,6 +3,7 @@ import { TagType } from "@/app/types";
 import { useState } from "react";
 import Tab from "../Tab";
 import { useAsyncEffect } from "ahooks";
+import { TopicCard } from "../CustomTag";
 
 const topic: TagType[] = [
   { name: "数学", id: 0 },
@@ -36,7 +37,7 @@ export default function Topic() {
     }
   };
   return (
-    <div className="w-full my-8 p-10 bg-white rounded border border-primary-border">
+    <div className="w-full my-8 px-10 py-8 bg-white rounded border border-primary-border">
       {/* header start */}
       <div className="flex justify-between gap-2 items-center">
         <div className="text-lg">专题广场</div>
@@ -49,13 +50,13 @@ export default function Topic() {
       </div>
       {/* header end */}
 
-      <div className="grid grid-cols-5 gap-4 h-32 my-4">
-        {subjectList.map((item) => (
-          <div className="relative bg-blue-200 rounded">
-            <div className="absolute bottom-0 w-full py-2 text-center text-gray-700 font-light bg-white/20">
+      <div className="grid grid-cols-5 gap-4 h-[240px] mt-8 mb-2">
+        {subjectList.map((item, i) => (
+          <TopicCard order={i} key={i}>
+            <div className="absolute bottom-0 w-full py-4 text-center text-[#333] font-light bg-white/30">
               {item.name}
             </div>
-          </div>
+          </TopicCard>
         ))}
       </div>
     </div>
