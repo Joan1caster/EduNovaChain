@@ -7,15 +7,20 @@ import {
   useRef,
   LegacyRef,
   MutableRefObject,
+  ChangeEvent,
+  FormEvent,
 } from "react";
 import { useFormState } from "react-dom";
 import Image from "next/image";
 import { createNFT } from "./actions";
 import SubmitButton from "../components/SubmitButton";
 import { Dialog, DialogPanel } from "@headlessui/react";
-import { useAsyncEffect } from "ahooks";
+import { useAsyncEffect, useCountDown } from "ahooks";
 import { useWriteContract, useReadContract } from "wagmi";
 import { ABIS, ContractConfig } from "../abis";
+import Loading from "../components/Loading";
+import { parseEther } from "viem";
+import { useRouter } from "next/navigation";
 
 type Props = {
   followTopics: TagType[];
@@ -92,44 +97,51 @@ function reducer(state: InitialState, action: Action) {
     }
   }
 }
-type InitialFormState = {
+type InitialFormSubmitState = {
+  step: "feature" | "ipfs" | "contract" | "submit";
   message: string;
-  type: "success" | "fail";
+  status: "loading" | "success" | "fail";
   data?: number;
 };
-const initialFormState: InitialFormState = { message: "", type: "fail" };
+const initialFormSubmitState: InitialFormSubmitState = {
+  step: "feature",
+  message: "",
+  status: "fail",
+};
 
 export default function Page() {
-  const [state, dispatch] = useReducer(reducer, initialState);
-  const { data, isError, isPending, writeContractAsync } = useWriteContract();
+  const router = useRouter();
+  const [targetDate, setTargetDate] = useState<number>();
 
-  const [formState, formAction] = useFormState(createNFT, initialFormState);
+  const [countdown] = useCountDown({
+    targetDate,
+    onEnd: () => {
+      router.replace("/");
+    },
+  });
+  const [state, dispatch] = useReducer(reducer, initialState);
+  const {
+    data: tokenId,
+    isError,
+    isPending,
+    writeContractAsync,
+  } = useWriteContract();
 
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-
+  const [formSubmitState, setFormSubmitState] =
+    useState<InitialFormSubmitState>(initialFormSubmitState);
   const [currentGrade, setCurrentGrade] = useState<number | null>();
   const [gradeList, setGradeList] = useState<TagType[]>([]);
   const [subjectList, setSubjectList] = useState<TagType[]>([]);
 
-  const {
-    data: balance,
-    isLoading,
-    status,
-    error,
-  } = useReadContract({
-    ...ContractConfig,
-    functionName: "balanceOf",
-    args: ["0xE460De64beecE8a6f5970931C6bb3277f5Cf5c77" as `0x${string}`],
-  });
   useAsyncEffect(async () => {
-    console.log(balance, isLoading, status, error);
     const response = await (await fetch("/api/grade")).json();
     if (response.count > 0) {
       setGradeList(response.data);
       setCurrentGrade(response.data[0].id);
     }
-  });
+  }, []);
 
   useAsyncEffect(async () => {
     if (currentGrade) {
@@ -148,13 +160,16 @@ export default function Page() {
 
   const onClose = () => {
     if (loading) return;
-    if (formState.type === "success") setIsOpen(false);
+    if (formSubmitState.status === "success") setIsOpen(false);
+  };
+
+  const sleep = () => {
+    setTimeout(() => {}, 200);
   };
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    // setIsLoading(true);
-    // setError(null); // Clear previous errors when a new request starts
+    setIsOpen(true);
 
     try {
       const formData = new FormData(event.currentTarget);
@@ -166,26 +181,90 @@ export default function Page() {
         topic: formData.get("topic"),
         grade: formData.get("grade"),
         subject: formData.get("subject"),
-        price: formData.get("price"),
+        price: parseEther(formData.get("price") as string),
       };
-      console.log(data);
-      const tokenId = await writeContractAsync({
-        ...ContractConfig,
-        functionName: "createInnovation",
-        args: ["1", "1", "1", BigInt(Number(data.price)) * BigInt(1e18), true],
+      setFormSubmitState((prevState) => {
+        prevState.step = "feature";
+        prevState.status = "loading";
+        prevState.message = "查重校对中，请等待…";
+        return prevState;
       });
-      // const response = await fetch("/api/submit", {
-      //   method: "POST",
-      //   body: formData,
-      // });
+      const responseFeature = await fetch("/api/nft", {
+        method: "PUT",
+        body: JSON.stringify({
+          title: data.title,
+          summary: data.summary,
+          content: data.content,
+        }),
+      });
 
-      // if (!response.ok) {
-      //   throw new Error("Failed to submit the data. Please try again.");
-      // }
+      const featureResponseJSON = await responseFeature.json();
 
-      // // Handle response if necessary
-      // const data = await response.json();
-      // ...
+      if (featureResponseJSON.code) {
+        setFormSubmitState((prevState) => {
+          prevState.step = "ipfs";
+          prevState.message = "上传IPFS中，请等待…";
+          return prevState;
+        });
+        const responseIPFS = await fetch("/api/ipfs", {
+          method: "POST",
+          body: JSON.stringify({
+            title: data.title,
+            summary: data.summary,
+            content: data.content,
+          }),
+        });
+        const ipfsHash = (await responseIPFS.json()).data;
+        // console.log(data, ipfsHash);
+
+        setFormSubmitState((prevState) => {
+          prevState.step = "contract";
+          prevState.status = "loading";
+          prevState.message = "创建NFT中，请等待…";
+          return prevState;
+        });
+        const tokenId = await writeContractAsync({
+          ...ContractConfig,
+          functionName: "createInnovation",
+          args: [
+            "1",
+            ipfsHash,
+            BigInt(Number(data.price)) * BigInt(1e18),
+            true,
+          ],
+        });
+        // console.log(tokenId);
+
+        setFormSubmitState((prevState) => {
+          prevState.step = "submit";
+          prevState.status = "loading";
+          prevState.message = "提交中，请等待…";
+          return prevState;
+        });
+        const response = await fetch("/api/nft", {
+          method: "POST",
+          body: JSON.stringify({
+            tokenId,
+            ...featureResponseJSON.data,
+            contractAddress: ContractConfig.address,
+            metadataURI: ipfsHash,
+            grade: currentGrade + "",
+            subject: state.subjectKeys.join(","),
+            topic: data.topic,
+          }),
+        });
+        setFormSubmitState((prevState) => {
+          prevState.status = "success";
+          prevState.message = "提交成功";
+          return prevState;
+        });
+        setTargetDate(Date.now() + 3000);
+      } else {
+        setFormSubmitState((prevState) => {
+          prevState.status = "fail";
+          return prevState;
+        });
+      }
     } catch (error) {
       // Capture the error message to display to the user
       // setError(error.message);
@@ -197,12 +276,11 @@ export default function Page() {
 
   return (
     <>
-      <form className="mx-auto" onSubmit={onSubmit}>
+      <form className="mx-auto pb-20" onSubmit={onSubmit}>
         <div className="space-y-12">
           <div>
             <h2 className="text-base font-semibold leading-7 text-center text-[#666]">
-              发布创意{balance}
-              {isLoading}
+              发布创意
             </h2>
 
             <div className="mt-10 grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
@@ -278,10 +356,13 @@ export default function Page() {
               <select
                 id="grade"
                 name="grade"
+                onChange={(e: ChangeEvent<HTMLInputElement>) => {
+                  setCurrentGrade(e.target.value);
+                }}
                 autoComplete="grade-name"
                 className="block w-20 rounded-md border-0 py-1.5 text-[#666] shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-primary sm:max-w-xs sm:text-sm sm:leading-6"
               >
-                {grades.map((item) => (
+                {gradeList.map((item) => (
                   <option key={item.id} value={item.id}>
                     {item.name}
                   </option>
@@ -332,7 +413,7 @@ export default function Page() {
 
             {/* subject start */}
             <div className="flex flex-wrap gap-2 mt-4">
-              {subjects.map((item) => (
+              {subjectList.map((item) => (
                 <div key={item.id}>
                   {state.subjectKeys.includes(item.id) ? (
                     <div
@@ -391,55 +472,70 @@ export default function Page() {
 
           <Dialog open={isOpen} onClose={onClose} className="relative z-5">
             <div className="fixed inset-0 flex w-screen h-screen items-center justify-center p-4 bg-black/40">
-              <DialogPanel className="w-[496px] py-12 flex flex-col justify-between items-center gap-6 space-y-4 bg-white rounded-lg overflow-hidden">
-                {loading && (
-                  <>
-                    <p className="text-[#333] text-lg">查重校对中，请等待…</p>
-                    <div className="flex w-14 h-24 relative space-x-2">
-                      <div className="w-2.5 h-2.5 absolute left-2 bottom-0 bg-blue-500 rounded-full animate-[loading_1s_ease-in-out_infinite]"></div>
-
-                      <div className="w-2.5 h-2.5 absolute left-4 bottom-0 bg-blue-500 rounded-full animate-[loading_1s_ease-in-out_infinite] [animation-delay:0.2s]"></div>
-
-                      <div className="w-2.5 h-2.5 absolute left-8 bottom-0 bg-blue-500 rounded-full animate-[loading_1s_ease-in-out_infinite] [animation-delay:0.4s]"></div>
-
-                      <div className="w-2.5 h-2.5 absolute left-12 bottom-0 bg-blue-500 rounded-full animate-[loading_1s_ease-in-out_infinite] [animation-delay:0.6s]"></div>
-                    </div>
-                  </>
-                )}
-                {!loading && formState.type === "success" && (
-                  <>
-                    <p className="text-[#333] text-lg">查重校对已通过</p>
-                    <Image
-                      src={"/images/slice/check_ok.png"}
-                      width={48}
-                      height={48}
-                      alt="check ok"
-                    />
-                  </>
-                )}
-                {!loading && formState.type === "fail" && (
-                  <>
-                    <p className="text-[#333] text-lg">
-                      查重校对结果：
-                      <span className="text-[#F06A6A]">
-                        {formState.data ?? 0}%
-                      </span>
-                      ，请返回修改！
-                    </p>
-                    <Image
-                      src={"/images/slice/check_fail.png"}
-                      width={48}
-                      height={48}
-                      alt="check fail"
-                    />
-                    <div
-                      onClick={() => setIsOpen(false)}
-                      className="rounded-md bg-primary px-6 py-2 mx-auto font-semibold text-white shadow-sm cursor-pointer hover:bg-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-light/50 "
-                    >
-                      返回修改
-                    </div>
-                  </>
-                )}
+              <DialogPanel className="w-[496px] py-12 relative flex flex-col justify-between items-center gap-6 space-y-4 bg-white rounded-lg overflow-hidden">
+                {formSubmitState.status !== "fail" &&
+                  !(
+                    formSubmitState.step === "submit" &&
+                    formSubmitState.status === "success"
+                  ) && (
+                    <>
+                      <p className="text-[#333] text-lg">
+                        {formSubmitState.message}
+                      </p>
+                      <Loading show={true} fullScreen={false} />
+                    </>
+                  )}
+                {formSubmitState.step === "submit" &&
+                  formSubmitState.status === "success" && (
+                    <>
+                      <p className="text-[#333] text-lg">
+                        {formSubmitState.message},{Math.round(countdown / 1000)}
+                        s自动返回主页
+                      </p>
+                      <Image
+                        src={"/images/slice/check_ok.png"}
+                        width={48}
+                        height={48}
+                        alt="check ok"
+                      />
+                    </>
+                  )}
+                {formSubmitState.step === "feature" &&
+                  formSubmitState.status === "success" && (
+                    <>
+                      <p className="text-[#333] text-lg">查重校对已通过</p>
+                      <Image
+                        src={"/images/slice/check_ok.png"}
+                        width={48}
+                        height={48}
+                        alt="check ok"
+                      />
+                    </>
+                  )}
+                {formSubmitState.step === "feature" &&
+                  formSubmitState.status === "fail" && (
+                    <>
+                      <p className="text-[#333] text-lg">
+                        查重校对结果：
+                        <span className="text-[#F06A6A]">
+                          {formSubmitState.data ?? 0}%
+                        </span>
+                        ，请返回修改！
+                      </p>
+                      <Image
+                        src={"/images/slice/check_fail.png"}
+                        width={48}
+                        height={48}
+                        alt="check fail"
+                      />
+                      <div
+                        onClick={() => setIsOpen(false)}
+                        className="rounded-md bg-primary px-6 py-2 mx-auto font-semibold text-white shadow-sm cursor-pointer hover:bg-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-light/50 "
+                      >
+                        返回修改
+                      </div>
+                    </>
+                  )}
               </DialogPanel>
             </div>
           </Dialog>

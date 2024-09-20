@@ -9,9 +9,9 @@ import { OrderTag } from "../CustomTag";
 
 const topic: TagType[] = [
   { name: "推荐", id: 0 },
-  { name: "电子信息", id: 1 },
-  { name: "航空航天", id: 2 },
-  { name: "人脸识别", id: 3 },
+  // { name: "电子信息", id: 1 },
+  // { name: "航空航天", id: 2 },
+  // { name: "人脸识别", id: 3 },
 ];
 
 const types: TagType[] = [
@@ -83,7 +83,7 @@ export default async function HomeSuggestion() {
     setIsAdd(false);
   };
   return (
-    <div className="w-full my-8 p-10 bg-white rounded border border-primary-border">
+    <div className="w-full my-8 px-10 py-8 bg-white rounded border border-primary-border">
       {isAdd ? (
         <ChangeFollowTopic
           followTopics={topics}
@@ -102,18 +102,18 @@ export default async function HomeSuggestion() {
                   {item.name}
                 </li>
               ))}
-              <li
+              {/* <li
                 className="text-black bg-primary-light_bg/50"
                 onClick={() => setIsAdd(true)}
               >
                 + 新增主题
-              </li>
+              </li> */}
             </ul>
             <div className="flex gap-2">
-              <Tab data={types} onChange={onChange} />
+              {/* <Tab data={types} onChange={onChange} />
               <div className="bg-primary-light_bg/50 px-2 py-1 rounded-md text-[0.75rem] cursor-pointer">
                 查看更多
-              </div>
+              </div> */}
             </div>
           </div>
           {/* header end */}
@@ -130,13 +130,13 @@ export default async function HomeSuggestion() {
                   </tr>
                 </thead>
                 <tbody className="bg-white">
-                  {tableData.slice(0, 5).map((item) => (
+                  {tableData.slice(0, 5).map((item, i) => (
                     <tr
                       onClick={() => router.push(`/idea/${item.index}`)}
                       className="*:p-2 *:whitespace-nowrap *:text-[#333] overflow-hidden cursor-pointer hover:bg-blue-50 rounded-md"
                     >
                       <td>
-                        <OrderTag order={item.index} bg={false} />
+                        <OrderTag order={item.index} bg={i < 3} />
                       </td>
                       <td>{item.name}</td>
                       <td>{item.publishDate}</td>

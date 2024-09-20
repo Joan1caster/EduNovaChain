@@ -6,12 +6,12 @@ import Topic from "./components/home/Topic";
 
 export default function Home() {
   return (
-    <section>
+    <>
       <Banner />
       <Suggestion />
       <BestSellerList />
       <HotSellerList />
       <Topic />
-    </section>
+    </>
   );
 }

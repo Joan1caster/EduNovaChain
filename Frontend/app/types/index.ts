@@ -69,4 +69,5 @@ export type NFT = {
   TransactionCount: number;
   UpdatedAt: string;
   ViewCount: number;
+  MetadataURI: string; // IPFS Hash
 };

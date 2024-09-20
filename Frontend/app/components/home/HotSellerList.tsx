@@ -5,9 +5,9 @@ import Tab from "../Tab";
 import { OrderTag } from "../CustomTag";
 
 const types: TagType[] = [
-  { name: "一天", key: 0 },
-  { name: "一周", key: 1 },
-  { name: "一月", key: 2 },
+  { name: "一天", id: 0 },
+  { name: "一周", id: 1 },
+  { name: "一月", id: 2 },
 ];
 
 const tableData: Table_Basic[] = [
@@ -60,18 +60,18 @@ export default function HotSellerList() {
     //
   };
   return (
-    <div className="w-full my-8 p-10 bg-white rounded border border-primary-border">
+    <div className="w-full my-8 px-10 py-8 bg-white rounded border border-primary-border">
       {/* header start */}
       <div className="flex justify-between gap-2 items-center">
         <div className="text-lg">热门榜单</div>
         <div className="flex gap-2">
-          <Tab data={types} onChange={onChange} />
+          {/* <Tab data={types} onChange={onChange} />
           <div className="bg-primary-light_bg px-2 py-1 rounded-md text-xs cursor-pointer">
             全部
           </div>
           <div className="bg-primary-light_bg px-2 py-1 rounded-md text-xs cursor-pointer">
             查看更多
-          </div>
+          </div> */}
         </div>
       </div>
       {/* header end */}
@@ -88,10 +88,10 @@ export default function HotSellerList() {
               </tr>
             </thead>
             <tbody className="bg-white">
-              {tableData.slice(0, 5).map((item) => (
+              {tableData.slice(0, 5).map((item, i) => (
                 <tr className="*:p-2 *:whitespace-nowrap overflow-hidden cursor-pointer hover:bg-blue-50 rounded-md">
                   <td>
-                    <OrderTag order={item.index} bg={false} />
+                    <OrderTag order={item.index} bg={i < 3} />
                   </td>
                   <td>{item.name}</td>
                   <td>{item.publishDate}</td>
@@ -114,7 +114,7 @@ export default function HotSellerList() {
               </thead>
               <tbody>
                 {tableData.slice(5).map((item) => (
-                  <tr className="*:p-2 *:whitespace-nowrap  *:cursor-pointer rounded-md  hover:bg-blue-50">
+                  <tr className="*:p-2 *:whitespace-nowrap *:cursor-pointer rounded-md hover:bg-blue-50">
                     <td>
                       <OrderTag order={item.index} bg={false} />
                     </td>

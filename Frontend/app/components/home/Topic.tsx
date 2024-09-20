@@ -2,45 +2,61 @@
 import { TagType } from "@/app/types";
 import { useState } from "react";
 import Tab from "../Tab";
+import { useAsyncEffect } from "ahooks";
+import { TopicCard } from "../CustomTag";
 
 const topic: TagType[] = [
-  { name: "数学", key: 0 },
-  { name: "物理与实验", key: 1 },
-  { name: "生物科学", key: 2 },
-  { name: "有机化学", key: 3 },
-  { name: "写作", key: 4 },
+  { name: "数学", id: 0 },
+  { name: "物理与实验", id: 1 },
+  { name: "生物科学", id: 2 },
+  { name: "有机化学", id: 3 },
+  { name: "写作", id: 4 },
 ];
 const types: TagType[] = [
-  { name: "小学", key: 0 },
-  { name: "初中", key: 1 },
-  { name: "高中", key: 2 },
-  { name: "高校", key: 3 },
+  { name: "小学", id: 0 },
+  { name: "初中", id: 1 },
+  { name: "高中", id: 2 },
+  { name: "高校", id: 3 },
 ];
 export default function Topic() {
-  const onChange = (item: TagType) => {
-    //
+  const [gradeList, setGradeList] = useState<TagType[]>([]);
+  const [subjectList, setSubjectList] = useState<TagType[]>([]);
+
+  useAsyncEffect(async () => {
+    const response = await (await fetch("/api/grade")).json();
+    if (response.count > 0) {
+      setGradeList(response.data);
+      onChange(response.data[0]);
+    }
+  }, []);
+
+  const onChange = async (grade: TagType) => {
+    const response = await (await fetch(`/api/subject?id=${grade.id}`)).json();
+    if (response.count > 0) {
+      setSubjectList(response.data);
+    }
   };
   return (
-    <div className="w-full my-8 p-10 bg-white rounded border border-primary-border">
+    <div className="w-full my-8 px-10 py-8 bg-white rounded border border-primary-border">
       {/* header start */}
       <div className="flex justify-between gap-2 items-center">
         <div className="text-lg">专题广场</div>
         <div className="flex gap-2">
-          <Tab data={types} onChange={onChange} />
-          <div className="bg-primary-light_bg px-2 py-1 rounded-md text-xs cursor-pointer">
+          <Tab data={gradeList} onChange={onChange} />
+          {/* <div className="bg-primary-light_bg px-2 py-1 rounded-md text-xs cursor-pointer">
             查看更多
-          </div>
+          </div> */}
         </div>
       </div>
       {/* header end */}
 
-      <div className="grid grid-cols-5 gap-4 h-32 my-4">
-        {topic.map((item) => (
-          <div className="relative bg-blue-200 rounded">
-            <div className="absolute bottom-0 w-full py-2 text-center text-gray-700 font-light bg-white/20">
+      <div className="grid grid-cols-5 gap-4 h-[240px] mt-8 mb-2">
+        {subjectList.map((item, i) => (
+          <TopicCard order={i} key={i}>
+            <div className="absolute bottom-0 w-full py-4 text-center text-[#333] font-light bg-white/30">
               {item.name}
             </div>
-          </div>
+          </TopicCard>
         ))}
       </div>
     </div>
