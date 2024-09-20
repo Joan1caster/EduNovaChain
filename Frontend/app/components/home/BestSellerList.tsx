@@ -1,8 +1,11 @@
 "use client";
-import { Table_Basic, TagType } from "@/app/types";
+
+import { NFT, Table_Basic, TagType } from "@/app/types";
 import { useState } from "react";
-import Tab from "../Tab";
+// import Tab from "../Tab";
 import { AiTag, OrderTag } from "../CustomTag";
+import { useAsyncEffect } from "ahooks";
+import { useRouter } from "next/navigation";
 
 const types: TagType[] = [
   { name: "一天", id: 0 },
@@ -10,57 +13,23 @@ const types: TagType[] = [
   { name: "一月", id: 2 },
 ];
 
-const tableData: Table_Basic[] = [
-  {
-    index: 1,
-    name: "创意点子",
-    publishDate: "2024-08-31",
-    sellPrice: "1.725 ETH",
-    isAi: true,
-  },
-  {
-    index: 2,
-    name: "创意点子",
-    publishDate: "2024-08-31",
-    sellPrice: "1.725 ETH",
-  },
-  {
-    index: 3,
-    name: "创意点子",
-    publishDate: "2024-08-31",
-    sellPrice: "1.725 ETH",
-  },
-  {
-    index: 4,
-    name: "创意点子",
-    publishDate: "2024-08-31",
-    sellPrice: "1.725 ETH",
-  },
-  {
-    index: 5,
-    name: "创意点子",
-    publishDate: "2024-08-31",
-    sellPrice: "1.725 ETH",
-  },
-  {
-    index: 6,
-    name: "创意点子",
-    publishDate: "2024-08-31",
-    sellPrice: "1.725 ETH",
-  },
-  {
-    index: 7,
-    name: "创意点子",
-    publishDate: "2024-08-31",
-    sellPrice: "1.725 ETH",
-    isAi: true,
-  },
-];
-
 export default function BestSellerList() {
+  const router = useRouter();
+  const [tableData, setTableData] = useState<NFT[]>([]);
   const onChange = (item: TagType) => {
     //
   };
+
+  useAsyncEffect(async () => {
+    try {
+      const response = await (
+        await fetch("/api/nfts?type=HighTrading&count=8")
+      ).json();
+      setTableData(response.data);
+    } catch {
+      //
+    }
+  }, []);
   return (
     <div className="w-full my-8 px-10 py-8 bg-white rounded border border-primary-border">
       {/* header start */}
@@ -80,24 +49,28 @@ export default function BestSellerList() {
 
       <div className="grid grid-cols-4 gap-6 my-6">
         {tableData.map((item, i) => (
-          <div key={i} className="p-6 border border-primary-border rounded-md">
+          <div
+            key={i}
+            className="p-6 border border-primary-border rounded-md"
+            onClick={() => router.push(`/nft/${item.ID}`)}
+          >
             <div className="flex gap-2 items-start">
               <div>
-                <OrderTag order={item.index} />
+                <OrderTag order={i} />
               </div>
               <div className="flex-1">
                 <div className="text-primary-font_3">
-                  {item.name}
-                  {item.isAi ? <AiTag /> : <></>}
+                  {item.Creator.Username}
+                  {/* {item.isAi ? <AiTag /> : <></>} */}
                 </div>
                 <div className="my-6 flex items-center gap-2 text-sm font-light text-gray-400">
-                  <p>售价：{item.sellPrice}</p>
+                  <p>售价：{item.Price}</p>
                   <p className="text-xs py-0.5 px-1 text-white bg-[#4BE2BB] rounded-sm">
-                    199人支持
+                    {item.LikeCount}人支持
                   </p>
                 </div>
                 <div className="text-right text-sm font-light text-gray-300">
-                  {item.publishDate}
+                  {item.CreatedAt}
                 </div>
               </div>
             </div>

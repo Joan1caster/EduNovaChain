@@ -1,11 +1,12 @@
 "use client";
 
-import { Table_Basic, TagType } from "@/app/types";
+import { NFT, TagType } from "@/app/types";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import ChangeFollowTopic from "./ChangeFollowTopic";
-import Tab from "../Tab";
+// import Tab from "../Tab";
 import { OrderTag } from "../CustomTag";
+import { useAsyncEffect } from "ahooks";
 
 const topic: TagType[] = [
   { name: "推荐", id: 0 },
@@ -20,53 +21,9 @@ const types: TagType[] = [
   { name: "畅销", id: 2 },
 ];
 
-const tableData: Table_Basic[] = [
-  {
-    index: 1,
-    name: "创意点子",
-    publishDate: "2024-08-31",
-    sellPrice: "1.725 ETH",
-  },
-  {
-    index: 2,
-    name: "创意点子",
-    publishDate: "2024-08-31",
-    sellPrice: "1.725 ETH",
-  },
-  {
-    index: 3,
-    name: "创意点子",
-    publishDate: "2024-08-31",
-    sellPrice: "1.725 ETH",
-  },
-  {
-    index: 4,
-    name: "创意点子",
-    publishDate: "2024-08-31",
-    sellPrice: "1.725 ETH",
-  },
-  {
-    index: 5,
-    name: "创意点子",
-    publishDate: "2024-08-31",
-    sellPrice: "1.725 ETH",
-  },
-  {
-    index: 6,
-    name: "创意点子",
-    publishDate: "2024-08-31",
-    sellPrice: "1.725 ETH",
-  },
-  {
-    index: 7,
-    name: "创意点子",
-    publishDate: "2024-08-31",
-    sellPrice: "1.725 ETH",
-  },
-];
-
-export default async function HomeSuggestion() {
+export default function HomeSuggestion() {
   const router = useRouter();
+  const [tableData, setTableData] = useState<NFT[]>([]);
   const [isAdd, setIsAdd] = useState<boolean>(false);
   const [topics, setTopics] = useState(topic);
   const [currentTopic, setCurrentTopic] = useState<TagType>(topic[0]);
@@ -82,6 +39,30 @@ export default async function HomeSuggestion() {
     setTopics(newTopics.slice());
     setIsAdd(false);
   };
+
+  useAsyncEffect(async () => {
+    try {
+      const response = await fetch("/api/search", {
+        method: "POST",
+        body: JSON.stringify({
+          keyword: "",
+          gradeIds: [],
+          subjectIds: [],
+          topicIds: [],
+          page: 1,
+          pagesize: 10,
+        }),
+      });
+      const responseJson = await response.json();
+      if (!!responseJson.count) {
+        setTableData(responseJson.data);
+      } else {
+        setTableData([]);
+      }
+    } catch {
+      //
+    }
+  }, []);
   return (
     <div className="w-full my-8 px-10 py-8 bg-white rounded border border-primary-border">
       {isAdd ? (
@@ -96,6 +77,7 @@ export default async function HomeSuggestion() {
             <ul className="flex gap-2 *:w-20 *:text-center *:rounded-full *:px-2 *:py-1 *:text-[0.75rem] *:hover:cursor-pointer">
               {topics.map((item) => (
                 <li
+                  key={item.id}
                   className={`${currentTopic.id === item.id ? "text-white bg-primary" : "text-black bg-primary-light_bg/50"}`}
                   onClick={() => onSwitchTopic(item)}
                 >
@@ -132,15 +114,16 @@ export default async function HomeSuggestion() {
                 <tbody className="bg-white">
                   {tableData.slice(0, 5).map((item, i) => (
                     <tr
-                      onClick={() => router.push(`/idea/${item.index}`)}
+                      key={i}
+                      onClick={() => router.push(`/nft/${item.ID}`)}
                       className="*:p-2 *:whitespace-nowrap *:text-[#333] overflow-hidden cursor-pointer hover:bg-blue-50 rounded-md"
                     >
                       <td>
-                        <OrderTag order={item.index} bg={i < 3} />
+                        <OrderTag order={i + 1} bg={i < 3} />
                       </td>
-                      <td>{item.name}</td>
-                      <td>{item.publishDate}</td>
-                      <td>{item.sellPrice}</td>
+                      <td>{item.Title}</td>
+                      <td>{item.CreatedAt}</td>
+                      <td>{item.Price}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -158,17 +141,18 @@ export default async function HomeSuggestion() {
                     </tr>
                   </thead>
                   <tbody>
-                    {tableData.slice(5).map((item) => (
+                    {tableData.slice(5).map((item, i) => (
                       <tr
-                        onClick={() => router.push(`/idea/${item.index}`)}
-                        className="*:p-2 *:whitespace-nowrap *:text-base *:cursor-pointer *:text-[#333] rounded-md hover:bg-blue-50"
+                        key={i}
+                        onClick={() => router.push(`/nft/${item.ID}`)}
+                        className="*:p-2 *:whitespace-nowrap *:text-[#333] overflow-hidden cursor-pointer hover:bg-blue-50 rounded-md"
                       >
                         <td>
-                          <OrderTag order={item.index} bg={false} />
+                          <OrderTag order={6 + i} />
                         </td>
-                        <td>{item.name}</td>
-                        <td>{item.publishDate}</td>
-                        <td>{item.sellPrice}</td>
+                        <td>{item.Title}</td>
+                        <td>{item.CreatedAt}</td>
+                        <td>{item.Price}</td>
                       </tr>
                     ))}
                   </tbody>

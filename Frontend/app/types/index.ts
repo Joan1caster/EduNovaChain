@@ -62,6 +62,7 @@ export type NFT = {
   LikeCount: number;
   Owner: Creator;
   OwnerID: number;
+  Price: number;
   Subjects: Topic[];
   SummaryFeature: string;
   TokenID: string;
@@ -70,4 +71,7 @@ export type NFT = {
   UpdatedAt: string;
   ViewCount: number;
   MetadataURI: string; // IPFS Hash
+  Title: string;
+  Summary: string;
+  Content: string;
 };

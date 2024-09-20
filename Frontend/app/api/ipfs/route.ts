@@ -25,8 +25,11 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   const hash = request.nextUrl.searchParams.get("hash");
-  const response = await fetch(`${url}/api/v1/ipfs/data/${hash}`);
-  const data = await response.json();
-
-  return Response.json(data);
+  try {
+    const response = await fetch(`${url}/api/v1/ipfs/data/${hash}`);
+    const data = await response.json();
+    return Response.json(data.data);
+  } catch {
+    return Response.json({ title: "", content: "", summary: "" });
+  }
 }

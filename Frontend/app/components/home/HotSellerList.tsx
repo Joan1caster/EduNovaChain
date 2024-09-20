@@ -1,8 +1,10 @@
 "use client";
-import { Table_Basic, TagType } from "@/app/types";
+import { NFT, Table_Basic, TagType } from "@/app/types";
 import { useState } from "react";
 import Tab from "../Tab";
 import { OrderTag } from "../CustomTag";
+import { useRouter } from "next/navigation";
+import { useAsyncEffect } from "ahooks";
 
 const types: TagType[] = [
   { name: "一天", id: 0 },
@@ -10,55 +12,20 @@ const types: TagType[] = [
   { name: "一月", id: 2 },
 ];
 
-const tableData: Table_Basic[] = [
-  {
-    index: 1,
-    name: "创意点子",
-    publishDate: "2024-08-31",
-    sellPrice: "1.725 ETH",
-  },
-  {
-    index: 2,
-    name: "创意点子",
-    publishDate: "2024-08-31",
-    sellPrice: "1.725 ETH",
-  },
-  {
-    index: 3,
-    name: "创意点子",
-    publishDate: "2024-08-31",
-    sellPrice: "1.725 ETH",
-  },
-  {
-    index: 4,
-    name: "创意点子",
-    publishDate: "2024-08-31",
-    sellPrice: "1.725 ETH",
-  },
-  {
-    index: 5,
-    name: "创意点子",
-    publishDate: "2024-08-31",
-    sellPrice: "1.725 ETH",
-  },
-  {
-    index: 6,
-    name: "创意点子",
-    publishDate: "2024-08-31",
-    sellPrice: "1.725 ETH",
-  },
-  {
-    index: 7,
-    name: "创意点子",
-    publishDate: "2024-08-31",
-    sellPrice: "1.725 ETH",
-  },
-];
-
 export default function HotSellerList() {
+  const router = useRouter();
+  const [tableData, setTableData] = useState<NFT[]>([]);
   const onChange = (item: TagType) => {
     //
   };
+  useAsyncEffect(async () => {
+    try {
+      const response = await (await fetch("/api/nfts?type=hottest")).json();
+      setTableData(response.data);
+    } catch {
+      //
+    }
+  }, []);
   return (
     <div className="w-full my-8 px-10 py-8 bg-white rounded border border-primary-border">
       {/* header start */}
@@ -89,13 +56,17 @@ export default function HotSellerList() {
             </thead>
             <tbody className="bg-white">
               {tableData.slice(0, 5).map((item, i) => (
-                <tr className="*:p-2 *:whitespace-nowrap overflow-hidden cursor-pointer hover:bg-blue-50 rounded-md">
+                <tr
+                  key={i}
+                  className="*:p-2 *:whitespace-nowrap overflow-hidden cursor-pointer hover:bg-blue-50 rounded-md"
+                  onClick={() => router.push(`/nft/${item.ID}`)}
+                >
                   <td>
-                    <OrderTag order={item.index} bg={i < 3} />
+                    <OrderTag order={i + 1} bg={i < 3} />
                   </td>
-                  <td>{item.name}</td>
-                  <td>{item.publishDate}</td>
-                  <td>{item.sellPrice}</td>
+                  <td>{item.Title}</td>
+                  <td>{item.CreatedAt}</td>
+                  <td>{item.Price}ETH</td>
                 </tr>
               ))}
             </tbody>
@@ -113,14 +84,18 @@ export default function HotSellerList() {
                 </tr>
               </thead>
               <tbody>
-                {tableData.slice(5).map((item) => (
-                  <tr className="*:p-2 *:whitespace-nowrap *:cursor-pointer rounded-md hover:bg-blue-50">
+                {tableData.slice(5).map((item, i) => (
+                  <tr
+                    key={i}
+                    className="*:p-2 *:whitespace-nowrap *:cursor-pointer rounded-md hover:bg-blue-50"
+                    onClick={() => router.push(`/nft/${item.ID}`)}
+                  >
                     <td>
-                      <OrderTag order={item.index} bg={false} />
+                      <OrderTag order={6 + i} bg={false} />
                     </td>
-                    <td>{item.name}</td>
-                    <td>{item.publishDate}</td>
-                    <td>{item.sellPrice}</td>
+                    <td>{item.Title}</td>
+                    <td>{item.CreatedAt}</td>
+                    <td>{item.Price}ETH</td>
                   </tr>
                 ))}
               </tbody>

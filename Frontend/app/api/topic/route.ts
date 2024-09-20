@@ -6,8 +6,8 @@ const url = process.env.NEXT_PUBLIC_URL;
 export async function GET(request: NextRequest) {
   const gradeId = request.nextUrl.searchParams.get("gradeId");
   const subjectId = request.nextUrl.searchParams.get("subjectId");
-  const response = await fetch(`${url}/api/v1/details`, {
-    method: "GET",
+  const response = await fetch(`${url}/api/v1/topic/subjectAndGrade`, {
+    method: "POST",
     cache: "no-store",
     body: JSON.stringify({
       gradeId,

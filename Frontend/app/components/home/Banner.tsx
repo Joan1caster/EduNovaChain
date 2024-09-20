@@ -26,7 +26,7 @@ const Banner = () => {
 
   useAsyncEffect(async () => {
     try {
-      const response = await (await fetch("/api/nfts")).json();
+      const response = await (await fetch("/api/nfts?type=latest")).json();
       setTotal(response.count);
       setData(response.data);
     } catch {
@@ -47,16 +47,16 @@ const Banner = () => {
             className="flex gap-x-6 flex-nowrap w-full transition-transform duration-500 ease-out"
             style={{ transform: `translateX(-${currentIndex * 524}px)` }} // 修改为33.3333%来实现每次移动1/3
           >
-            {data.map((slide: NFT, index: number) => (
+            {data.map((item: NFT, index: number) => (
               <BannerCard order={index} key={index}>
                 <div className="relative h-full p-6 rounded overflow-hidden bg-[url('/images/slice/banner_card_bg.jpg')] bg-cover bg-no-repeat">
-                  <Link href={`/nft/${slide.ID}`}>
-                    <p className="text-[20px] text-[#293748]">
-                      创意点子标题内容
+                  <Link href={`/nft/${item.ID}`}>
+                    <p className="text-[20px] text-[#293748]">{item.Title}</p>
+                    <p className="my-6 text-[14px] text-[#666]">
+                      {item.Price}ETH
                     </p>
-                    <p className="my-6 text-[14px] text-[#666]">免费</p>
                     <p className="absolute right-6 bottom-6 text-[14px] text-right text-[#ABC5EB] font-light">
-                      {slide.CreatedAt}
+                      {item.CreatedAt}
                     </p>
                   </Link>
                 </div>

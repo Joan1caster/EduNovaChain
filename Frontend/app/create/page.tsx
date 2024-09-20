@@ -1,23 +1,12 @@
 "use client";
 import { TagType } from "@/app/types";
-import {
-  useState,
-  useEffect,
-  useReducer,
-  useRef,
-  LegacyRef,
-  MutableRefObject,
-  ChangeEvent,
-  FormEvent,
-} from "react";
-import { useFormState } from "react-dom";
+import { useState, useReducer, ChangeEvent, FormEvent } from "react";
 import Image from "next/image";
-import { createNFT } from "./actions";
 import SubmitButton from "../components/SubmitButton";
 import { Dialog, DialogPanel } from "@headlessui/react";
 import { useAsyncEffect, useCountDown } from "ahooks";
-import { useWriteContract, useReadContract } from "wagmi";
-import { ABIS, ContractConfig } from "../abis";
+import { useWriteContract } from "wagmi";
+import { ContractConfig } from "../abis";
 import Loading from "../components/Loading";
 import { parseEther } from "viem";
 import { useRouter } from "next/navigation";

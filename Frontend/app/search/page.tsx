@@ -1,133 +1,194 @@
 "use client";
 
-import { useState } from "react";
-import { Table_Basic, TagType } from "../types";
-import { useRouter } from "next/navigation";
+import { ChangeEvent, useState } from "react";
+import { NFT, Table_Basic, TagType } from "../types";
+import { useRouter, useSearchParams } from "next/navigation";
 import { AiTag } from "../components/CustomTag";
-
-const grades: TagType[] = [
-  { name: "全部", key: -1 },
-  { name: "小学", key: 0 },
-  { name: "初中", key: 1 },
-  { name: "高中", key: 2 },
-  { name: "高校", key: 3 },
-];
-
-const subjects: TagType[] = [
-  { name: "哲学", key: 0 },
-  { name: "法学", key: 1 },
-  { name: "经济学", key: 2 },
-  { name: "文学", key: 3 },
-  { name: "理学", key: 4 },
-  { name: "教育学", key: 5 },
-  { name: "历史学", key: 6 },
-  { name: "工学", key: 7 },
-  { name: "农学", key: 5 },
-  { name: "医学", key: 6 },
-  { name: "军事学", key: 7 },
-];
-
-const topics: TagType[] = [
-  { name: "电子", key: 0 },
-  { name: "航天", key: 1 },
-  { name: "设计", key: 2 },
-  { name: "机器学习", key: 3 },
-  { name: "市场营销", key: 4 },
-  { name: "古代文学", key: 5 },
-  { name: "现代文学", key: 6 },
-  { name: "中国近代史", key: 7 },
-  { name: "美国近代史", key: 8 },
-  { name: "植物学", key: 9 },
-  { name: "军事学", key: 10 },
-];
-
-const tableData: Table_Basic[] = [
-  {
-    index: 1,
-    name: "创意点子",
-    publishDate: "2024-08-31",
-    sellPrice: "1.725 ETH",
-    isAi: true
-  },
-  {
-    index: 2,
-    name: "创意点子",
-    publishDate: "2024-08-31",
-    sellPrice: "1.725 ETH",
-  },
-  {
-    index: 3,
-    name: "创意点子",
-    publishDate: "2024-08-31",
-    sellPrice: "1.725 ETH",
-  },
-  {
-    index: 4,
-    name: "创意点子",
-    publishDate: "2024-08-31",
-    sellPrice: "1.725 ETH",
-  },
-  {
-    index: 5,
-    name: "创意点子",
-    publishDate: "2024-08-31",
-    sellPrice: "1.725 ETH",
-  },
-  {
-    index: 6,
-    name: "创意点子",
-    publishDate: "2024-08-31",
-    sellPrice: "1.725 ETH",
-  },
-  {
-    index: 7,
-    name: "创意点子",
-    publishDate: "2024-08-31",
-    sellPrice: "1.725 ETH",
-  },
-];
+import Pagination from "../components/Pagination";
+import Loading from "../components/Loading";
+import { useAsyncEffect, useDebounceEffect } from "ahooks";
 
 const types: TagType[] = [
-  { name: "最新", key: 0 },
-  { name: "最热", key: 1 },
-  { name: "畅销", key: 2 },
+  { name: "最新", id: 0 },
+  { name: "最热", id: 1 },
+  { name: "畅销", id: 2 },
 ];
-
+const PageSize = 20;
 export default function Page() {
   const router = useRouter();
-  const [currentGrade, setCurrentGrade] = useState(-1);
+  const searchParams = useSearchParams();
+  const [tableData, setTableData] = useState<NFT[]>([]);
   const [currentType, setCurrentType] = useState<TagType>(types[0]);
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [total, setTotal] = useState<number>(0);
+  const [loading, setLoading] = useState(false);
+  const [selectedSubject, setSelectSubject] = useState<number[]>([]);
+  const [selectedTopic, setSelectTopic] = useState<number[]>([]);
+
+  const [currentGrade, setCurrentGrade] = useState<number | null>();
+  const [gradeList, setGradeList] = useState<TagType[]>([]);
+
+  const [subjectList, setSubjectList] = useState<TagType[]>([]);
+
+  const [topicList, setTopicList] = useState<TagType[]>([]);
 
   const onSwitchType = (item: TagType) => {
     setCurrentType(item);
   };
 
-  const onChangeGrade = (grade: TagType) => {
-    setCurrentGrade(grade.key);
+  const getSubjectList = async () => {
+    if (currentGrade) {
+      const response = await (
+        await fetch(`/api/subject?id=${currentGrade}`)
+      ).json();
+
+      setSelectSubject([]);
+      setSelectTopic([]);
+      if (response.count > 0) {
+        setSubjectList(response.data);
+      }
+    }
   };
+  const getTopicList = async () => {
+    if (currentGrade) {
+      const response = await (
+        await fetch(
+          `/api/topic?gradeId=${currentGrade}&subjectId=${selectedSubject.join(",")}`
+        )
+      ).json();
+      setSelectTopic([]);
+      if (response.count > 0) {
+        setTopicList(response.data);
+      }
+    }
+  };
+
+  useAsyncEffect(async () => {
+    const response = await (await fetch("/api/grade")).json();
+    if (response.count > 0) {
+      setGradeList(response.data);
+      setCurrentGrade(response.data[0].id);
+    }
+  }, []);
+
+  useDebounceEffect(() => {
+    getSubjectList();
+  }, [currentGrade]);
+
+  useDebounceEffect(() => {
+    getTopicList();
+  }, [currentGrade, selectedSubject]);
+
+  const onChangeGrade = (grade: TagType) => {
+    setCurrentGrade(grade.id);
+  };
+
+  useDebounceEffect(
+    () => {
+      //
+    },
+    [currentGrade, selectedSubject],
+    {
+      wait: 2000,
+    }
+  );
+  const onSearch = async () => {
+    const response = await fetch("/api/search", {
+      method: "POST",
+      body: JSON.stringify({
+        keyword: searchParams.get("key"),
+        gradeIds: [currentGrade],
+        subjectIds: selectedSubject,
+        topicIds: selectedTopic,
+        page: 1,
+        pagesize: PageSize,
+      }),
+    });
+    const responseJson = await response.json();
+    if (!!responseJson.count) {
+      setTableData(responseJson.data);
+      setTotal(responseJson.count);
+    } else {
+      setTableData([]);
+      setTotal(0);
+    }
+  };
+
+  const onSubjectChange = (checked: boolean, id: number) => {
+    const selected = [...selectedSubject];
+    if (checked) selected.push(id);
+    else {
+      selected.splice(selected.indexOf(id), 1);
+    }
+    setCurrentPage(1);
+    setSelectSubject(selected);
+  };
+  const onTopicChange = (checked: boolean, id: number) => {
+    const selected = [...selectedTopic];
+    if (checked) selected.push(id);
+    else {
+      selected.splice(selected.indexOf(id), 1);
+    }
+    setSelectTopic(selected);
+  };
+
+  useDebounceEffect(
+    () => {
+      onSearch();
+    },
+    [currentPage, selectedSubject, selectedTopic],
+    {
+      wait: 2000,
+    }
+  );
   return (
-    <div className="flex items-start gap-4">
-      {/* left start */}
-      <div className="w-86">
-        <div className="min-h-80 bg-white rounded-sm shadow-sm mb-4">
-          <div className="py-4 text-center bg-gray-50">学科分类</div>
-          <div className="p-4">
-            <div>
-              {grades.map((item) => (
-                <span
-                  key={item.key}
-                  className={`${currentGrade === item.key ? "text-white bg-primary" : "hover:bg-gray-100"} inline-block py-1 px-4 rounded-sm text-sm font-light text-[#666] cursor-pointer`}
-                  onClick={() => onChangeGrade(item)}
-                >
-                  {item.name}
-                </span>
-              ))}
+    <div>
+      <Loading show={loading} />
+      <div className="flex items-start gap-4">
+        {/* left start */}
+        <div className="w-[332px]">
+          <div className="w-full min-h-80 bg-white rounded-sm shadow-sm mb-4">
+            <div className="py-4 text-center bg-gray-50">学科分类</div>
+            <div className="p-4">
+              <div>
+                {gradeList.map((item) => (
+                  <span
+                    key={item.id}
+                    className={`${currentGrade === item.id ? "text-white bg-primary" : "hover:bg-gray-100"} inline-block py-1 px-4 rounded-sm text-sm font-light text-[#666] cursor-pointer`}
+                    onClick={() => onChangeGrade(item)}
+                  >
+                    {item.name}
+                  </span>
+                ))}
+              </div>
+              <div className="mt-4">
+                {subjectList.map((item) => (
+                  <div className="my-3 flex items-center">
+                    <input
+                      type="checkbox"
+                      onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                        onSubjectChange(e.target.checked, item.id)
+                      }
+                      className="form-checkbox mr-1 rounded-sm w-4 h-4 border-[#979797] focus:ring-offset-0 focus:ring-0"
+                    />
+                    <label className="leading-none text-[#666]">
+                      {item.name}
+                    </label>
+                  </div>
+                ))}
+              </div>
             </div>
-            <div className="mt-4">
-              {subjects.map((item) => (
+          </div>
+          <div className="min-h-80 bg-white pb-14 rounded-sm shadow-sm">
+            <div className="py-4 text-center bg-gray-50">主题分类</div>
+            <div className="px-4 pt-2 pb-4">
+              {topicList.map((item) => (
                 <div className="my-3 flex items-center">
                   <input
                     type="checkbox"
+                    onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                      onTopicChange(e.target.checked, item.id)
+                    }
                     className="form-checkbox mr-1 rounded-sm w-4 h-4 border-[#979797] focus:ring-offset-0 focus:ring-0"
                   />
                   <label className="leading-none text-[#666]">
@@ -138,75 +199,73 @@ export default function Page() {
             </div>
           </div>
         </div>
-        <div className="min-h-80 bg-white rounded-sm shadow-sm">
-          <div className="py-4 text-center bg-gray-50">主题分类</div>
-          <div className="px-4 pt-2 pb-4">
-            {topics.map((item) => (
-              <div className="my-3 flex items-center">
-                <input
-                  type="checkbox"
-                  className="form-checkbox mr-1 rounded-sm w-4 h-4 border-[#979797] focus:ring-offset-0 focus:ring-0"
-                />
-                <label className="leading-none text-[#666]">{item.name}</label>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-      {/* left end */}
-      {/* right start */}
-      <div className="flex-1 min-h-[41rem] bg-white rounded-sm shadow-sm">
-        <div className="py-3 px-4 h-14 flex justify-between items-center bg-gray-50">
-          <p className="font-light text-xs text-[#666]">
-            当前总有<span className="text-primary text-base">12386</span>
-            个作品
-          </p>
-          <ul className="flex w-36 justify-around bg-gray-100 rounded-md *:text-sm *:hover:cursor-pointer">
-            {types.map((item) => (
-              <li
-                className={`w-full py-1 rounded-md text-center ${currentType.key === item.key ? " bg-blue-200" : " bg-gray-100"}`}
-                onClick={() => onSwitchType(item)}
-              >
-                {item.name}
-              </li>
-            ))}
-          </ul>
-        </div>
-        <div className="p-4">
-          <table className="w-full">
-            <thead>
-              <tr className="*:px-2 *:py-3 *:text-left *:text-xs *:font-normal *:text-primary-font_9 *:uppercase">
-                <th className="w-12">序号</th>
-                <th className="min-w-36">创意名称</th>
-                <th className="w-24">作者</th>
-                <th className="w-24">发布日期</th>
-                <th className="w-24">售价</th>
-                <th className="w-24">热度</th>
-                <th className="w-24">销量</th>
-                <th className="w-24">被引用次数</th>
-              </tr>
-            </thead>
-            <tbody className="bg-white">
-              {tableData.slice(0, 5).map((item) => (
-                <tr
-                  onClick={() => router.push(`/idea/${item.index}`)}
-                  className="*:p-2 *:whitespace-nowrap overflow-hidden cursor-pointer hover:bg-blue-50 rounded-md"
+        {/* left end */}
+        {/* right start */}
+        <div className="flex-1 min-h-[41rem] relative bg-white rounded-sm shadow-sm">
+          <div className="py-3 px-4 h-14 flex justify-between items-center bg-gray-50">
+            <p className="font-light text-xs text-[#666]">
+              当前总有<span className="text-primary text-base">{total}</span>
+              个作品
+            </p>
+            <ul className="flex w-36 justify-around bg-gray-100 rounded-md *:text-sm *:hover:cursor-pointer">
+              {/* {types.map((item) => (
+                <li
+                  className={`w-full py-1 rounded-md text-center ${currentType.id === item.id ? " bg-blue-200" : " bg-gray-100"}`}
+                  onClick={() => onSwitchType(item)}
                 >
-                  <td className="w-12">{item.index}</td>
-                  <td className="min-w-36">{item.name}{item.isAi ? <AiTag /> : <></>}</td>
-                  <td className="w-24 text-blue-400">{item.name}</td>
-                  <td className="w-24">{item.publishDate}</td>
-                  <td className="w-24">{item.sellPrice}</td>
-                  <td className="w-24">{item.name}</td>
-                  <td className="w-24">{item.publishDate}</td>
-                  <td className="w-24">{item.sellPrice}</td>
+                  {item.name}
+                </li>
+              ))} */}
+            </ul>
+          </div>
+          <div className="p-4">
+            <table className="w-full">
+              <thead>
+                <tr className="*:px-2 *:py-3 *:text-left *:text-xs *:font-normal *:text-primary-font_9 *:uppercase">
+                  <th className="w-12">序号</th>
+                  <th className="min-w-36">创意名称</th>
+                  <th className="w-24">作者</th>
+                  <th className="w-24">发布日期</th>
+                  <th className="w-24">售价</th>
+                  <th className="w-24">热度</th>
+                  <th className="w-24">销量</th>
+                  {/* <th className="w-24">被引用次数</th> */}
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="bg-white">
+                {tableData.slice(0, 5).map((item, i) => (
+                  <tr
+                    onClick={() => router.push(`/nft/${item.ID}`)}
+                    className="*:p-2 *:whitespace-nowrap overflow-hidden cursor-pointer hover:bg-blue-50 rounded-md"
+                  >
+                    <td className="w-12">
+                      {PageSize * (currentPage - 1) + i + 1}
+                    </td>
+                    <td className="min-w-36">
+                      {item.Title}
+                      {/* {item.isAi ? <AiTag /> : <></>} */}
+                    </td>
+                    <td className="w-24 text-blue-400">
+                      {item.Creator.Username}
+                    </td>
+                    <td className="w-24">{item.CreatedAt}</td>
+                    <td className="w-24">{item.Price}ETH</td>
+                    <td className="w-24">{item.LikeCount}</td>
+                    <td className="w-24">{item.TransactionCount}</td>
+                    {/* <td className="w-24">{item.sellPrice}</td> */}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <Pagination
+            total={total}
+            currentPage={currentPage}
+            onPageChange={(page: number) => setCurrentPage(page)}
+          />
         </div>
+        {/* right end */}
       </div>
-      {/* right end */}
     </div>
   );
 }

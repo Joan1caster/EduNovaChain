@@ -39,7 +39,6 @@ export default function LoginButton({ email }: { email: string }) {
   }, [address, isConnected]);
 
   useEffect(() => {
-    console.log(signMessageData);
     if (signMessageData)
       fetch(`/api/login`, {
         method: "POST",

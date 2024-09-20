@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { ChangeEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 
@@ -13,7 +13,9 @@ export default function Search() {
       <div className="w-52 rounded bg-white py-1 pr-2 flex gap-2 justify-between">
         <input
           value={keywords}
-          readOnly
+          onChange={(e: ChangeEvent<HTMLInputElement>) =>
+            setKeywords(e.target.value)
+          }
           placeholder="搜索"
           className="text-xs placeholder:text-primary-font_C border-none outline-none shadow-none focus:shadow-none focus:ring-offset-0 focus:ring-0"
         />

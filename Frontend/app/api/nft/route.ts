@@ -16,6 +16,15 @@ export async function GET(request: NextRequest) {
   const data = await response.json();
   const nft = data.nft as NFT;
 
+  const ipfsDataResponse = await fetch(
+    `${request.nextUrl.origin}/api/ipfs?hash=${nft.MetadataURI}`
+  );
+  const ipfsData = await ipfsDataResponse.json();
+
+  nft.Title = ipfsData.title;
+  nft.Summary = ipfsData.summary;
+  nft.Content = ipfsData.content;
+
   nft.CreatedAt = dayjs(nft.CreatedAt).format("YYYY-MM-DD");
   nft.UpdatedAt = dayjs(nft.UpdatedAt).format("YYYY-MM-DD");
 
