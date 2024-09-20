@@ -49,7 +49,7 @@ func SetupRouter(db *gorm.DB) *gin.Engine {
 		public.GET("/grade", nftHandler.GetGradeList)                               // 查询年级 -- pass
 		public.GET("/subject/:grade", nftHandler.GetSubjectByGrade)                 // 根据年级查学科 -- pass
 		public.POST("/topic/subjectAndGrade", nftHandler.GetTopicBySubjectAndGrade) // 根据年级\学科查主题 -- pass
-		public.GET("/order/history", orderHandler.GetHistoryByNFTId)                // 根据NFT id查其交易记录
+		public.POST("/order/history", orderHandler.GetHistoryByNFTId)               // 根据NFT id查其交易记录
 		//ipfs 相关路由
 		public.POST("/ipfs/upload", ipfsHandler.UploadData) // 上传数据到IPFS -- bad
 		public.GET("/ipfs/data/:hash", ipfsHandler.GetData) // 从下载数据到本地 -- bad
