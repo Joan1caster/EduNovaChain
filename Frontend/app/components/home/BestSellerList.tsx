@@ -56,11 +56,11 @@ export default function BestSellerList() {
           >
             <div className="flex gap-2 items-start">
               <div>
-                <OrderTag order={i} />
+                <OrderTag order={i + 1} />
               </div>
               <div className="flex-1">
                 <div className="text-primary-font_3">
-                  {item.Creator.Username}
+                  {item.Title}
                   {/* {item.isAi ? <AiTag /> : <></>} */}
                 </div>
                 <div className="my-6 flex items-center gap-2 text-sm font-light text-gray-400">

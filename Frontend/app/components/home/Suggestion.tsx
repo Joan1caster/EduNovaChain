@@ -63,6 +63,7 @@ export default function HomeSuggestion() {
       //
     }
   }, []);
+
   return (
     <div className="w-full my-8 px-10 py-8 bg-white rounded border border-primary-border">
       {isAdd ? (
@@ -148,7 +149,7 @@ export default function HomeSuggestion() {
                         className="*:p-2 *:whitespace-nowrap *:text-[#333] overflow-hidden cursor-pointer hover:bg-blue-50 rounded-md"
                       >
                         <td>
-                          <OrderTag order={6 + i} />
+                          <OrderTag order={6 + i} bg={false} />
                         </td>
                         <td>{item.Title}</td>
                         <td>{item.CreatedAt}</td>

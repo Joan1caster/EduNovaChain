@@ -8,17 +8,11 @@ import Image from "next/image";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { Dialog, DialogPanel } from "@headlessui/react";
 
-export default function LoginButton({ email }: { email: string }) {
-  const [isOpen, setIsOpen] = useState(true);
+export default function LoginButton() {
+  const [isOpen, setIsOpen] = useState(false);
   const { address, isConnected } = useAccount();
   const [message, setMessage] = useState<string>("");
-  const {
-    data: signMessageData,
-    error,
-    signMessage,
-    status,
-    variables,
-  } = useSignMessage();
+  const { data: signMessageData, signMessage, variables } = useSignMessage();
 
   useAsyncEffect(async () => {
     if (address && isConnected) {

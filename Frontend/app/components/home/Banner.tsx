@@ -26,7 +26,7 @@ const Banner = () => {
 
   useAsyncEffect(async () => {
     try {
-      const response = await (await fetch("/api/nfts?type=latest")).json();
+      const response = await (await fetch("/api/nfts?type=latest&count=6")).json();
       setTotal(response.count);
       setData(response.data);
     } catch {
@@ -49,7 +49,6 @@ const Banner = () => {
           >
             {data.map((item: NFT, index: number) => (
               <BannerCard order={index} key={index}>
-                <div className="relative h-full p-6 rounded overflow-hidden bg-[url('/images/slice/banner_card_bg.jpg')] bg-cover bg-no-repeat">
                   <Link href={`/nft/${item.ID}`}>
                     <p className="text-[20px] text-[#293748]">{item.Title}</p>
                     <p className="my-6 text-[14px] text-[#666]">
@@ -59,7 +58,6 @@ const Banner = () => {
                       {item.CreatedAt}
                     </p>
                   </Link>
-                </div>
               </BannerCard>
             ))}
           </div>
