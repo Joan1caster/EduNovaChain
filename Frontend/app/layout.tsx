@@ -23,11 +23,12 @@ export default function RootLayout({
 
   // 获取相对路径 (假设 referer 是完整的 URL)
   const relativeUrl = referer ? new URL(referer).pathname : "";
+  console.log(relativeUrl);
   return (
     <html lang="en">
       <body className={inter.className}>
         <div
-          className={`relative min-w-screen min-h-screen w-full h-full ${relativeUrl === "/" && "bg-[url('/images/slice/banner_bg.png')] bg-[length:100%_auto] bg-no-repeat"}`}
+          className={`relative min-w-screen min-h-screen w-full h-full pb-20 ${relativeUrl === "/" && "bg-[url('/images/slice/banner_bg.png')] bg-[length:100%_auto] bg-no-repeat"}`}
         >
           <WagmiContext>
             <Header />

@@ -7,6 +7,7 @@ import { AiTag } from "../components/CustomTag";
 import Pagination from "../components/Pagination";
 import Loading from "../components/Loading";
 import { useAsyncEffect, useDebounceEffect } from "ahooks";
+import Link from "next/link";
 
 const types: TagType[] = [
   { name: "最新", id: 0 },
@@ -234,15 +235,12 @@ export default function Page() {
               </thead>
               <tbody className="bg-white">
                 {tableData.slice(0, 5).map((item, i) => (
-                  <tr
-                    onClick={() => router.push(`/nft/${item.ID}`)}
-                    className="*:p-2 *:whitespace-nowrap overflow-hidden cursor-pointer hover:bg-blue-50 rounded-md"
-                  >
+                  <tr className="*:p-2 *:whitespace-nowrap overflow-hidden cursor-pointer hover:bg-blue-50 rounded-md">
                     <td className="w-12">
                       {PageSize * (currentPage - 1) + i + 1}
                     </td>
                     <td className="min-w-36">
-                      {item.Title}
+                      <Link href={`/nft/${item.ID}`}>{item.Title}</Link>
                       {/* {item.isAi ? <AiTag /> : <></>} */}
                     </td>
                     <td className="w-24 text-blue-400">
