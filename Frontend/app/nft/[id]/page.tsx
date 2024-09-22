@@ -2,61 +2,10 @@
 import Image from "next/image";
 import { IdeaInfo, NFT, Table_Basic, TagType } from "@/app/types";
 import { useEffect, useState } from "react";
+import { useWriteContract } from "wagmi";
+import { ContractConfig } from "@/app/abis";
+import { parseEther } from "viem";
 
-const info: IdeaInfo = {
-  index: 1,
-  author: "章三",
-  avator: "/images/png/cute_devil.png",
-  name: "创意点子",
-  publishDate: "2024-08-31",
-  sellPrice: "1.725 ETH",
-  rmb: 20,
-  like: 100,
-  view: 3912,
-  buy: 21,
-  citation: 99,
-  userLiked: true,
-  userCitationed: false,
-  topicNameList: ["教育创意", "学习技巧"],
-  gradeName: "高校",
-  subjectName: "航空",
-  transactionRecord: [],
-  citationRecord: [],
-  comment: [],
-};
-
-const tableData: Table_Basic[] = [
-  {
-    index: 1,
-    name: "创意点子",
-    publishDate: "2024-08-31",
-    sellPrice: "1.725 ETH",
-  },
-  {
-    index: 2,
-    name: "创意点子",
-    publishDate: "2024-08-31",
-    sellPrice: "1.725 ETH",
-  },
-  {
-    index: 3,
-    name: "创意点子",
-    publishDate: "2024-08-31",
-    sellPrice: "1.725 ETH",
-  },
-  {
-    index: 4,
-    name: "创意点子",
-    publishDate: "2024-08-31",
-    sellPrice: "1.725 ETH",
-  },
-  {
-    index: 5,
-    name: "创意点子",
-    publishDate: "2024-08-31",
-    sellPrice: "1.725 ETH",
-  },
-];
 const info_tag: TagType[] = [
   { name: "基本信息", id: 0 },
   { name: "创意详设", id: 1 },
@@ -70,6 +19,8 @@ export default function Page({ params: { id } }: { params: { id: string } }) {
   const [nftInfo, setNFTInfo] = useState<NFT>();
   const [currentTag, setCurrentTag] = useState<TagType>(info_tag[0]);
   const [currentType, setCurrentType] = useState<TagType>(types[0]);
+  const { isError, isPending, writeContractAsync } = useWriteContract();
+  const [loading, setLoading] = useState(false);
 
   const onSwitchTag = (item: TagType) => {
     setCurrentTag(item);
@@ -84,6 +35,38 @@ export default function Page({ params: { id } }: { params: { id: string } }) {
     setNFTInfo(data);
   };
 
+  const onBuy = async () => {
+    setLoading(true);
+    try {
+      const orderResponse = await fetch(`/api/order?type=orderId&value=${id}`);
+      const orderJson = await orderResponse.json();
+      const orderId = orderJson.data.ID;
+
+      console.log(parseEther(orderJson.data.Price.toString()));
+      const hash = await writeContractAsync({
+        ...ContractConfig,
+        functionName: "purchaseInnovation",
+        args: [nftInfo?.TokenID],
+        value: parseEther(orderJson.data.Price.toString()),
+      });
+      console.log(hash, parseEther(orderJson.data.Price.toString()));
+
+      // const hash =
+      //   "0xde64c521638a1f32724abd6e0040e857197196c314569a16af04b627d963ea32";
+
+      const buyResponse = await fetch("/api/order", {
+        method: "POST",
+        body: JSON.stringify({
+          order_id: orderId,
+          tx_hash: hash,
+        }),
+      });
+      console.log(buyResponse);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     getDetail();
   }, []);
@@ -91,11 +74,11 @@ export default function Page({ params: { id } }: { params: { id: string } }) {
   return (
     <div>
       {/* head start */}
-      <h3 className="text-lg mt-2">{info.name}</h3>
+      <h3 className="text-lg mt-2">{nftInfo?.Title}</h3>
       <div className="flex justify-between items-center my-2">
         <div className="flex items-center gap-1">
           <Image
-            src={info.avator}
+            src="/images/png/cute_devil.png"
             width={12}
             height={12}
             alt={nftInfo?.Creator.Username || ""}
@@ -180,7 +163,7 @@ export default function Page({ params: { id } }: { params: { id: string } }) {
               </p>
 
               <h4 className="mt-4">摘要内容</h4>
-              <p className="mt-1 text-sm text-gray-600">{info.publishDate}</p>
+              <p className="mt-1 text-sm text-gray-600">{nftInfo?.Summary}</p>
 
               <h4 className="mt-4">主题关键词</h4>
               <p className="mt-1 text-sm text-gray-600">
@@ -195,7 +178,7 @@ export default function Page({ params: { id } }: { params: { id: string } }) {
           ) : (
             <div className="my-4">
               {/* idea info start */}
-
+              {nftInfo?.Content}
               {/* idea info end */}
             </div>
           )}
@@ -208,14 +191,15 @@ export default function Page({ params: { id } }: { params: { id: string } }) {
             当前作品为定价销售，可直接按照以下价格一次性购买使用
           </p>
           <h1 className="text-center font-bold text-lg mt-6">
-            {info.sellPrice}
+            {nftInfo?.Price}ETH
           </h1>
           {/* <p className="text-center text-base text-gray-200 my-2">
             ¥ {info.rmb}
           </p> */}
           <div className="mt-28">
             <button
-              disabled={true}
+              disabled={loading}
+              onClick={onBuy}
               className="w-full rounded-md bg-blue-600 px-6 py-1.5 text-sm font-light text-white shadow-sm hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:bg-blue-400 disabled:cursor-not-allowed"
             >
               购买
@@ -230,11 +214,11 @@ export default function Page({ params: { id } }: { params: { id: string } }) {
       {/* basic info end */}
 
       {/* record start */}
-      <div className="h-min-52 my-4">
+      <div className="min-h-52 my-4">
         <div className=" bg-white rounded-sm shadow-sm p-4">
           <div className="w-full">
             <h1 className="text-md mb-2">交易记录</h1>
-            <table className="w-full">
+            <table className="w-full min-h-52">
               <thead>
                 <tr className="*:px-2 *:py-3 *:text-left *:font-normal *:text-sm *:text-gray-400 *:uppercase">
                   <th>序号</th>
@@ -245,7 +229,7 @@ export default function Page({ params: { id } }: { params: { id: string } }) {
                 </tr>
               </thead>
               <tbody className="bg-white">
-                {tableData.slice(0, 5).map((item) => (
+                {(nftInfo?.HistoryList ?? []).slice(0, 5).map((item) => (
                   <tr className="*:p-2 *:whitespace-nowrap *:text-xs overflow-hidden cursor-pointer hover:bg-blue-50 rounded-md">
                     <td className="text-gray-400">{item.index}</td>
                     <td>{item.name}</td>
@@ -301,7 +285,7 @@ export default function Page({ params: { id } }: { params: { id: string } }) {
       {/* interaction start */}
       <div className="flex justify-center gap-6 relative my-6">
         <div
-          className={`w-12 h-12 rounded-full flex items-center flex-col justify-center border border-gray-100 cursor-pointer ${info.userLiked ? "bg-blue-400 text-white" : "focus:bg-blue-200"}`}
+          className={`w-12 h-12 rounded-full flex items-center flex-col justify-center border border-gray-100 cursor-pointer ${nftInfo?.Likes ? "bg-blue-400 text-white" : "focus:bg-blue-200"}`}
         >
           <svg
             t="1725256924681"
@@ -315,17 +299,17 @@ export default function Page({ params: { id } }: { params: { id: string } }) {
           >
             <path
               d="M489.264 908.336L157.7728 576.8416c-84.352-84.352-84.352-221.1168 0-305.4704 84.352-84.352 221.1168-84.352 305.4704 0l48.7552 48.7552 48.7584-48.7552c83.5104-83.5088 218.3872-84.344 302.9248-2.5056l2.544 2.5056c84.3552 84.352 84.3552 221.1168 0 305.4704L534.736 908.3344a31.9152 31.9152 0 0 1-22.9104 9.3744h-0.216a31.9104 31.9104 0 0 1-22.3456-9.3744zM512 863.1856l320.2864-320.2848c65.5648-65.5648 65.608-171.84 0.128-237.4592l-2.2512-2.216c-65.824-63.5872-170.6336-62.744-235.4656 2.088l-48.7584 48.7552c-18.744 18.744-49.136 18.744-67.8816 0l-48.7552-48.7568c-65.608-65.608-171.9808-65.608-237.5888 0-65.608 65.608-65.608 171.9808 0 237.5888L512 863.1872z"
-              fill={`${info.userLiked ? "#fff" : "#222"}`}
+              fill={`${nftInfo?.Likes ? "#fff" : "#222"}`}
               p-id="1962"
             ></path>
           </svg>
           <p
-            className={`text-[0.6rem] ${info.userLiked ? "text-white" : "text-gray-400"}`}
+            className={`text-[0.6rem] ${nftInfo?.Likes ? "text-white" : "text-gray-400"}`}
           >
-            {info.like}
+            {nftInfo?.LikeCount}
           </p>
         </div>
-        <div
+        {/* <div
           className={`w-12 h-12 rounded-full flex items-center flex-col justify-center border border-gray-100 cursor-pointer ${info.userCitationed ? "bg-blue-400 text-white" : "focus:bg-blue-200"}`}
         >
           <svg
@@ -349,7 +333,7 @@ export default function Page({ params: { id } }: { params: { id: string } }) {
           >
             引用
           </p>
-        </div>
+        </div> */}
         <div className="absolute right-0 -bottom-2 flex">
           <svg
             t="1725257786425"
@@ -449,7 +433,7 @@ export default function Page({ params: { id } }: { params: { id: string } }) {
                   p-id="1962"
                 ></path>
               </svg>
-              <p className="text-[0.6rem] text-gray-400">{info.like}</p>
+              <p className="text-[0.6rem] text-gray-400">{nftInfo?.Likes}</p>
             </div>
           </div>
         </div>

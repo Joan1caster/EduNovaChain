@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
   const data = await response.json();
   const idsFetch: any[] = [];
   let list: NFT[] = [];
-  if (data.count > 0) {
+  if (data.data.length > 0) {
     data.data.forEach((item: any) => {
       idsFetch.push(
         fetch(`${request.nextUrl.origin}/api/ipfs?hash=${item.MetadataURI}`)
@@ -40,7 +40,7 @@ export async function GET(request: NextRequest) {
   });
 
   return Response.json({
-    count: data.count,
+    count: data.count ?? 0,
     data: list,
   });
 }
