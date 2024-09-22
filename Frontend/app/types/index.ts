@@ -60,6 +60,7 @@ export type NFT = {
   Grades: Topic[];
   ID: number;
   LikeCount: number;
+  Likes: any;
   Owner: Creator;
   OwnerID: number;
   Price: number;
@@ -74,4 +75,6 @@ export type NFT = {
   Title: string;
   Summary: string;
   Content: string;
+  HistoryList?: any[];
+  OrderID?: number;
 };

@@ -5,7 +5,7 @@ import Image from "next/image";
 import SubmitButton from "../components/SubmitButton";
 import { Dialog, DialogPanel } from "@headlessui/react";
 import { useAsyncEffect, useCountDown } from "ahooks";
-import { useWriteContract } from "wagmi";
+import { useAccount, usePublicClient, useWriteContract } from "wagmi";
 import { ContractConfig } from "../abis";
 import Loading from "../components/Loading";
 import { parseEther } from "viem";
@@ -15,41 +15,6 @@ type Props = {
   followTopics: TagType[];
   onUpdateFollowTopics: (topics: TagType[]) => void;
 };
-
-const grades: TagType[] = [
-  { name: "小学", id: 0 },
-  { name: "初中", id: 1 },
-  { name: "高中", id: 2 },
-  { name: "高校", id: 3 },
-];
-
-const subjects: TagType[] = [
-  { name: "哲学", id: 0 },
-  { name: "法学", id: 1 },
-  { name: "经济学", id: 2 },
-  { name: "文学", id: 3 },
-  { name: "理学", id: 4 },
-  { name: "教育学", id: 5 },
-  { name: "历史学", id: 6 },
-  { name: "工学", id: 7 },
-  { name: "农学", id: 8 },
-  { name: "医学", id: 9 },
-  { name: "军事学", id: 10 },
-];
-
-const topics: TagType[] = [
-  { name: "电子", id: 0 },
-  { name: "航天", id: 1 },
-  { name: "设计", id: 2 },
-  { name: "机器学习", id: 3 },
-  { name: "市场营销", id: 4 },
-  { name: "古代文学", id: 5 },
-  { name: "现代文学", id: 6 },
-  { name: "中国近代史", id: 7 },
-  { name: "美国近代史", id: 8 },
-  { name: "植物学", id: 9 },
-  { name: "军事学", id: 10 },
-];
 
 type InitialState = {
   subjectKeys: number[];
@@ -109,6 +74,9 @@ export default function Page() {
     },
   });
   const [state, dispatch] = useReducer(reducer, initialState);
+
+  const { chainId } = useAccount();
+  const client = usePublicClient({ chainId });
   const {
     data: tokenId,
     isError,
@@ -170,8 +138,11 @@ export default function Page() {
         topic: formData.get("topic"),
         grade: formData.get("grade"),
         subject: formData.get("subject"),
-        price: parseEther(formData.get("price") as string),
+        priceInEth: formData.get("price"),
+        price: parseEther(formData.get("price") as string, "wei"),
       };
+      // console.log(data);
+      // throw new Error("//");
       setFormSubmitState((prevState) => {
         prevState.step = "feature";
         prevState.status = "loading";
@@ -188,8 +159,8 @@ export default function Page() {
       });
 
       const featureResponseJSON = await responseFeature.json();
-
-      if (featureResponseJSON.code) {
+      console.log(featureResponseJSON);
+      if (featureResponseJSON.code === 200) {
         setFormSubmitState((prevState) => {
           prevState.step = "ipfs";
           prevState.message = "上传IPFS中，请等待…";
@@ -212,17 +183,25 @@ export default function Page() {
           prevState.message = "创建NFT中，请等待…";
           return prevState;
         });
-        const tokenId = await writeContractAsync({
-          ...ContractConfig,
-          functionName: "createInnovation",
-          args: [
-            "1",
-            ipfsHash,
-            BigInt(Number(data.price)) * BigInt(1e18),
-            true,
-          ],
+        const hash = await writeContractAsync(
+          {
+            ...ContractConfig,
+            functionName: "createInnovation",
+            args: ["1", ipfsHash, data.price, true],
+          },
+          {
+            onError: (error) => {
+              console.log(error);
+            },
+          }
+        );
+        console.log("hash", hash);
+
+        const receipt = await client?.waitForTransactionReceipt({
+          hash,
         });
-        // console.log(tokenId);
+        const tokenId = Number(receipt?.logs[1].data).toString();
+        console.log(tokenId);
 
         setFormSubmitState((prevState) => {
           prevState.step = "submit";
@@ -230,6 +209,17 @@ export default function Page() {
           prevState.message = "提交中，请等待…";
           return prevState;
         });
+        console.log(
+          JSON.stringify({
+            tokenId,
+            ...featureResponseJSON.data,
+            contractAddress: ContractConfig.address,
+            metadataURI: ipfsHash,
+            grade: currentGrade + "",
+            subject: state.subjectKeys.join(","),
+            topic: data.topic,
+          })
+        );
         const response = await fetch("/api/nft", {
           method: "POST",
           body: JSON.stringify({
@@ -240,6 +230,7 @@ export default function Page() {
             grade: currentGrade + "",
             subject: state.subjectKeys.join(","),
             topic: data.topic,
+            price: Number(formData.get("price") ?? 0),
           }),
         });
         setFormSubmitState((prevState) => {
@@ -249,8 +240,11 @@ export default function Page() {
         });
         setTargetDate(Date.now() + 3000);
       } else {
+        console.log("???");
         setFormSubmitState((prevState) => {
+          prevState.step = "feature";
           prevState.status = "fail";
+          console.log(prevState);
           return prevState;
         });
       }
@@ -265,7 +259,7 @@ export default function Page() {
 
   return (
     <>
-      <form className="mx-auto pb-20" onSubmit={onSubmit}>
+      <form className="mx-auto" onSubmit={onSubmit}>
         <div className="space-y-12">
           <div>
             <h2 className="text-base font-semibold leading-7 text-center text-[#666]">
@@ -507,7 +501,7 @@ export default function Page() {
                       <p className="text-[#333] text-lg">
                         查重校对结果：
                         <span className="text-[#F06A6A]">
-                          {formSubmitState.data ?? 0}%
+                          {formSubmitState.data ?? 90}%
                         </span>
                         ，请返回修改！
                       </p>

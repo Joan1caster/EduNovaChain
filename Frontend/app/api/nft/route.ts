@@ -8,7 +8,6 @@ const url = process.env.NEXT_PUBLIC_URL;
 
 export async function GET(request: NextRequest) {
   const id = request.nextUrl.searchParams.get("id");
-  console.log(id);
   const response = await fetch(`${url}/api/v1/nfts/${id}`, {
     method: "GET",
     cache: "no-store",
@@ -37,6 +36,15 @@ export async function GET(request: NextRequest) {
 
   nft.Categories = CategoriesList.join(",");
 
+  const historyResponse = await fetch(`${url}/api/v1/order/history`, {
+    method: "POST",
+    cache: "no-store",
+    body: JSON.stringify({ nftId: nft.ID }),
+  });
+
+  const historyJsonData = await historyResponse.json();
+  nft.HistoryList = historyJsonData.data;
+
   return Response.json(data.nft);
 }
 
@@ -56,6 +64,20 @@ export async function POST(request: NextRequest) {
 
   const data = await response.json();
 
+  const orderResponse = await fetch(`${url}/api/v1/orders`, {
+    method: "POST",
+    body: JSON.stringify({
+      nftId: data.id,
+      price: body.price,
+    }),
+    headers: {
+      Authorization: Authorization,
+    },
+  });
+
+  const orderJson = await orderResponse.json();
+  console.log(orderJson);
+
   return Response.json(data);
 }
 
@@ -66,9 +88,15 @@ export async function PUT(request: NextRequest) {
     body: JSON.stringify(body),
   });
   const data = await response.json();
-
-  return Response.json({
-    code: 200,
-    data,
-  });
+  if (data.error) {
+    return Response.json({
+      code: 500,
+      data,
+    });
+  } else {
+    return Response.json({
+      code: 200,
+      data,
+    });
+  }
 }

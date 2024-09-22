@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
 
   const data = await response.json();
 
-  return Response.json({ data: data.data.IpfsHash });
+  return Response.json({ data: data.data });
 }
 
 export async function GET(request: NextRequest) {
